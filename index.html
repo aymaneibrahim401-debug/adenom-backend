@@ -689,7 +689,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
       <img src="images/image3.jpg" alt="Port de Mahajanga">
     </div>
     <div class="gallery-caption">
-      <h3>🌊 Le port de Majunga</h3>
+      <h3>🌊 Le port de Mahajanga</h3>
       <p>La presqu'île emblématique, coeur battant de la ville</p>
     </div>
   </div>
@@ -699,7 +699,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
       <img src="images/image4.jpg" alt="Quartiers de Mahajanga">
     </div>
     <div class="gallery-caption">
-      <h3>🏘️ Les quartiers de Maintirano</h3>
+      <h3>🏘️ Les quartiers</h3>
       <p>La vie animée des rues de Mahajanga vue du ciel</p>
     </div>
   </div>
@@ -709,8 +709,8 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
       <img src="images/image2.jpg" alt="Paysage naturel de Mahajanga">
     </div>
     <div class="gallery-caption">
-      <h3>🌿 Paysages naturels de Betsiboka</h3>
-      <p>La beauté sauvage de Betsiboka</p>
+      <h3>🌿 Paysages naturels</h3>
+      <p>La beauté sauvage de la nature malgache</p>
     </div>
   </div>
 </section>
@@ -1131,7 +1131,7 @@ async function handleAuthSubmit(e, type){
       }
 
       document.getElementById('authSuccessTitle').textContent = 'Compte créé !';
-      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} ! Votre compte ADENOM est prêt.`;
+      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} ! Un email de confirmation vous a été envoyé, pensez à vérifier votre boîte de réception.`;
       switchAuthPanel('success');
       setTimeout(closeAuthModal, 1800);
       updateAccountUI();
@@ -1317,6 +1317,11 @@ function updateAccountUI(){
       if(textEl) textEl.textContent = 'Votre compte est actif. Rejoignez la communauté pour devenir membre.';
       if(iconEl) iconEl.textContent = '👤';
       if(dot) dot.style.background = '#0070ba';
+    }
+
+    // Rappel discret si l'email n'a pas encore été confirmé
+    if(currentUser.emailVerified === false && textEl){
+      textEl.textContent += ' · Pensez à confirmer votre adresse e-mail (lien envoyé par email).';
     }
   } else {
     if(btnLogin) btnLogin.style.display = '';

@@ -3,6 +3,7 @@
 
 const db = require('../lib/db');
 const { hashPassword, generateToken, generateId } = require('../lib/auth');
+const { sendVerificationEmail } = require('../lib/email');
 const {
   handlePreflight,
   normalizeEmail,
@@ -66,6 +67,21 @@ module.exports = async (req, res) => {
     const token = generateToken();
     const expiresAt = Date.now() + SESSION_DURATION_MS;
     await db.createSession({ token, userId: user.id, createdAt: now, expiresAt });
+
+    // Envoi de l'email de confirmation (ne bloque pas l'inscription en cas d'échec)
+    try {
+      const verifyToken = generateToken();
+      const verifyExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24h
+      await db.createEmailVerification({
+        token: verifyToken,
+        userId: user.id,
+        createdAt: now,
+        expiresAt: verifyExpiresAt
+      });
+      await sendVerificationEmail({ to: user.email, firstName: user.firstName, token: verifyToken });
+    } catch (emailErr) {
+      console.error("Échec de l'envoi de l'email de vérification:", emailErr);
+    }
 
     setSessionCookie(res, token, SESSION_DURATION_MS);
     return res.status(201).json({ user: sanitizeUser(user) });

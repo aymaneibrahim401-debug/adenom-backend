@@ -53,7 +53,24 @@ serverless).
    (`users`, `sessions`) est créé automatiquement au premier appel de l'API
    (voir `lib/db.js`, fonction `init()`).
 
-## 2️⃣ Déployer sur Vercel
+## 2️⃣ Confirmation d'email (Resend) — optionnel mais recommandé
+
+Pour envoyer l'email de confirmation à l'inscription, il faut :
+
+1. Posséder un **nom de domaine** (ex: `adenom.org`)
+2. Créer un compte sur https://resend.com (gratuit)
+3. Dans "Domains", ajouter votre domaine et configurer les enregistrements DNS
+   fournis (SPF, DKIM) chez votre registrar — vérification généralement sous 1h
+4. Dans "API Keys", créer une clé API
+5. Récupérer :
+   - `RESEND_API_KEY` (la clé créée)
+   - `RESEND_FROM_EMAIL` (ex: `ADENOM <noreply@adenom.org>`, doit utiliser le domaine vérifié)
+
+> Si ces variables ne sont pas configurées, l'inscription fonctionne quand même
+> normalement — l'email de confirmation est simplement ignoré (un message est
+> écrit dans les logs Vercel).
+
+## 3️⃣ Déployer sur Vercel
 
 1. Poussez ce projet sur un dépôt GitHub (ou GitLab/Bitbucket).
 2. Sur https://vercel.com, cliquez **"Add New" → "Project"** et importez le dépôt.
@@ -66,6 +83,9 @@ serverless).
    | `TURSO_DATABASE_URL` | (obtenu à l'étape 1) |
    | `TURSO_AUTH_TOKEN` | (obtenu à l'étape 1) |
    | `ADMIN_CODE` | un code secret de votre choix (remplace la valeur par défaut) |
+   | `RESEND_API_KEY` | (obtenu à l'étape 2, optionnel) |
+   | `RESEND_FROM_EMAIL` | (obtenu à l'étape 2, optionnel) |
+   | `SITE_URL` | l'URL de votre projet Vercel, ex: `https://adenom-backend.vercel.app` (optionnel, requis pour le lien de confirmation) |
 5. Cliquez **Deploy**. Votre site est en ligne sur `https://votre-projet.vercel.app`.
 
 ## 3️⃣ Développement local
@@ -97,6 +117,7 @@ et les fonctions `api/*` sur `http://localhost:3000`.
 | POST | `/api/login` | Connexion |
 | POST | `/api/logout` | Déconnexion |
 | GET | `/api/me` | Utilisateur courant |
+| GET | `/api/verify-email?token=...` | Confirme l'adresse e-mail (lien cliqué) |
 | POST | `/api/join` | Demande d'adhésion |
 | GET | `/api/admin/users` | Liste des utilisateurs (code admin requis) |
 | POST | `/api/admin/validate` | Valider/rejeter une adhésion (code admin requis) |
