@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADENOM - Paiement en ligne</title>
+<meta name="theme-color" content="#0070ba">
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+
+html{scroll-behavior:smooth;}
+
+:root{
+  --bg-page:#0a1628;
+  --bg-header:#ffffff;
+  --bg-section-light:#ffffff;
+  --bg-section-alt:#f5f8fb;
+  --bg-card:#ffffff;
+  --text-title:#003087;
+  --text-secondary:#555555;
+  --text-secondary2:#666666;
+  --border-color:#e8eef5;
+  --menu-bg:#ffffff;
+  --menu-text:#333333;
+  --menu-border:#eeeeee;
+}
+
+body.dark-mode{
+  --bg-page:#070f1c;
+  --bg-header:#0f2034;
+  --bg-section-light:#0f2034;
+  --bg-section-alt:#0a1628;
+  --bg-card:#15273f;
+  --text-title:#6fb3ff;
+  --text-secondary:#b8c6d9;
+  --text-secondary2:#b8c6d9;
+  --border-color:#1f3a57;
+  --menu-bg:#0f2034;
+  --menu-text:#e8eef5;
+  --menu-border:#1f3a57;
+}
+
+body,header,.side-menu,.anniversary-section,.gallery-section,.services,.card,
+.region-page,.section-title,.anniv-title,.anniv-subtitle,.card h3,.card p,
+.region-page-body p,.side-menu a{
+  transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease;
+}
+
+body{
+  background:var(--bg-page);
+  max-width:390px;
+  min-height:100vh;
+  margin:auto;
+  border-left:1px solid rgba(255,255,255,0.08);
+  border-right:1px solid rgba(255,255,255,0.08);
+  overflow-x:hidden;
+}
+
+/* HEADER */
+header{
+  background:var(--bg-header);
+  padding:8px 8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  gap:6px;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  transition:transform 0.3s ease;
+}
+header.hide-on-scroll{
+  transform:translateY(-100%);
+}
+
+.logo-img{width:38px;flex-shrink:0;}
+
+.header-right{
+  flex:1;
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  min-width:0;
+}
+
+.btn-login{
+  text-decoration:none;background:white;color:#0070ba;
+  padding:7px 12px;border-radius:20px;font-weight:bold;
+  font-size:12px;border:2px solid #0070ba;white-space:nowrap;transition:0.2s;
+}
+.btn-login:hover{background:#f0f4f8;}
+.btn-login:active{transform:scale(0.92);background:#0070ba;color:white;}
+
+.btn-signup{
+  text-decoration:none;background:#0070ba;color:white;
+  padding:7px 14px;border-radius:20px;font-weight:bold;
+  font-size:13px;white-space:nowrap;transition:0.2s;
+}
+.btn-signup:hover{background:#005ea6;}
+.btn-signup:active{transform:scale(0.95);}
+
+/* BANDEAU LOGO MEMBRE (remplace Connexion / Ouvrir un compte) */
+.member-banner{
+  height:38px;width:100%;max-width:none;object-fit:contain;
+  flex:1;
+}
+
+.hamburger{
+  background:#f0f4f8;padding:8px 12px;border:none;
+  border-radius:20px;font-size:18px;cursor:pointer;
+  flex-shrink:0;transition:0.2s;
+}
+.hamburger:active{transform:scale(1.2);}
+
+/* PROFILE BUBBLE */
+.profile-bubble-wrap{position:relative;}
+.profile-bubble{
+  width:38px;height:38px;border-radius:50%;
+  background:#0070ba;color:white;border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:0.2s;position:relative;
+  padding:0;
+}
+.profile-bubble svg{width:22px;height:22px;}
+.profile-bubble:hover{background:#005ea6;}
+.profile-bubble:active{transform:scale(0.92);}
+.profile-bubble-dot{
+  position:absolute;top:-2px;right:-2px;
+  width:11px;height:11px;border-radius:50%;
+  background:#f5a623;border:2px solid var(--bg-header);
+}
+
+.profile-menu{
+  position:absolute;top:48px;right:0;
+  width:260px;background:var(--bg-card);
+  border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.18);
+  padding:16px;z-index:1200;
+  opacity:0;visibility:hidden;transform:translateY(-8px);
+  transition:0.2s;
+  border:1px solid var(--border-color);
+}
+.profile-menu.open{opacity:1;visibility:visible;transform:translateY(0);}
+
+.profile-menu-status{
+  display:flex;gap:10px;align-items:flex-start;
+  padding-bottom:14px;border-bottom:1px solid var(--border-color);
+  margin-bottom:12px;
+}
+.profile-menu-icon{font-size:22px;line-height:1;flex-shrink:0;}
+.profile-menu-status strong{
+  display:block;font-size:13px;color:var(--text-title);margin-bottom:4px;
+}
+.profile-menu-status p{
+  font-size:12px;color:var(--text-secondary2);line-height:1.5;
+}
+
+.profile-menu-logout{
+  width:100%;background:none;border:1px solid var(--border-color);
+  color:#e0334d;padding:9px;border-radius:20px;
+  font-weight:bold;font-size:13px;cursor:pointer;transition:0.2s;
+}
+.profile-menu-logout:hover{background:rgba(224,51,77,0.08);}
+.profile-menu-logout:active{transform:scale(0.97);}
+
+.profile-menu-nav{
+  display:flex;flex-direction:column;gap:2px;margin-bottom:12px;
+}
+.profile-menu-nav a{
+  text-decoration:none;color:var(--menu-text);font-weight:bold;
+  font-size:13px;padding:8px 0;border-bottom:1px solid var(--menu-border);
+}
+.profile-menu-nav .menu-toggle-row{
+  border-bottom:none;font-size:13px;padding:8px 0;
+}
+
+/* SIDE MENU */
+.side-menu{
+  position:fixed;top:0;right:-270px;width:270px;height:100vh;
+  background:var(--menu-bg);padding:20px;display:flex;flex-direction:column;
+  gap:15px;transition:0.3s;box-shadow:-3px 0 10px rgba(0,0,0,0.2);z-index:2000;
+}
+.side-menu.open{right:0;}
+.side-menu a{text-decoration:none;color:var(--menu-text);font-weight:bold;padding:8px 0;border-bottom:1px solid var(--menu-border);}
+
+/* DARK MODE TOGGLE (dans le menu) */
+.menu-toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--menu-border);
+  color:var(--menu-text);font-weight:bold;
+}
+.switch{
+  position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;
+}
+.switch input{opacity:0;width:0;height:0;}
+.switch-slider{
+  position:absolute;cursor:pointer;inset:0;
+  background-color:#ccc;border-radius:24px;transition:0.3s;
+}
+.switch-slider::before{
+  content:"";position:absolute;height:18px;width:18px;
+  left:3px;bottom:3px;background-color:white;border-radius:50%;
+  transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.3);
+}
+.switch input:checked + .switch-slider{background-color:#0070ba;}
+.switch input:checked + .switch-slider::before{transform:translateX(20px);}
+
+.overlay{
+  position:fixed;top:0;left:0;width:100%;height:100vh;
+  background:rgba(0,0,0,0.4);display:none;z-index:1500;
+}
+.overlay.show{display:block;}
+
+/* ========== HERO avec parallax zoom ========== */
+.hero{
+  position:relative;
+  height:100vh;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.hero-bg{
+  position:absolute;inset:0;
+  /* hero-bg-placeholder */
+  background-size:cover;
+  background-position:center;
+  transform:scale(1.15);
+  transition:transform 0.1s linear;
+  will-change:transform;
+}
+
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,30,80,0.35) 0%,
+    rgba(0,15,50,0.65) 60%,
+    rgba(0,10,40,0.85) 100%
+  );
+}
+
+.hero-content{
+  position:absolute;
+  z-index:2;
+  left:0;
+  bottom:280px;
+  padding:0 20px;
+  text-align:left;
+  max-width:340px;
+}
+
+.hero-badge{
+  display:inline-block;
+  background:rgba(0,112,186,0.85);
+  color:white;font-size:11px;font-weight:bold;
+  padding:4px 12px;border-radius:20px;letter-spacing:1px;
+  margin-bottom:12px;text-transform:uppercase;
+  backdrop-filter:blur(4px);
+}
+
+.hero-subtitle{
+  font-size:28px;font-weight:700;color:white;
+  line-height:1.3;text-shadow:0 2px 12px rgba(0,0,0,0.5);
+  margin-bottom:14px;
+}
+
+.hero-text{
+  font-size:14px;color:rgba(255,255,255,0.88);
+  line-height:1.6;text-shadow:0 1px 6px rgba(0,0,0,0.4);
+  margin-bottom:20px;
+}
+
+.hero-cta{
+  display:inline-block;text-decoration:none;
+  background:#0070ba;color:white;
+  padding:12px 24px;border-radius:25px;
+  font-weight:bold;font-size:14px;
+  box-shadow:0 4px 20px rgba(0,112,186,0.4);
+  transition:0.2s;
+}
+.hero-cta:hover{background:#005ea6;transform:translateY(-2px);}
+
+/* ========== SCROLL INDICATOR ========== */
+.scroll-indicator{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;
+  animation:bounce 2s infinite;
+}
+.scroll-indicator span{font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:1px;}
+.scroll-arrow{width:20px;height:20px;border-right:2px solid rgba(255,255,255,0.5);border-bottom:2px solid rgba(255,255,255,0.5);transform:rotate(45deg);}
+
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
+/* ========== SECTION 30 ANS ========== */
+.anniversary-section{
+  position:relative;overflow:hidden;
+  padding:50px 20px;
+  background:var(--bg-section-light);
+  text-align:center;
+}
+
+.anniv-zoom-container{
+  position:relative;display:flex;
+  align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+
+.anniv-img{
+  width:180px;height:180px;object-fit:contain;
+  transition:transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  transform:scale(0.7);opacity:0;
+}
+.anniv-img.visible{transform:scale(1);opacity:1;}
+
+.anniv-title{font-size:22px;font-weight:800;color:var(--text-title);margin-bottom:8px;}
+.anniv-subtitle{font-size:14px;color:var(--text-secondary);line-height:1.6;}
+
+.anniv-years{
+  display:flex;gap:6px;justify-content:center;margin-top:16px;
+}
+.year-pill{
+  background:#0070ba;color:white;font-size:11px;font-weight:bold;
+  padding:4px 12px;border-radius:20px;
+}
+
+/* ========== GALLERY SECTION ========== */
+.gallery-section{
+  padding:40px 20px;
+  background:var(--bg-section-alt);
+}
+
+.section-label{
+  font-size:11px;font-weight:bold;color:#0070ba;
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;
+}
+.section-title{
+  font-size:22px;font-weight:800;color:var(--text-title);
+  margin-bottom:24px;line-height:1.3;
+}
+
+.gallery-card{
+  position:relative;border-radius:16px;overflow:hidden;
+  margin-bottom:20px;box-shadow:0 6px 24px rgba(0,0,0,0.12);
+  cursor:pointer;
+}
+
+.gallery-card .img-wrap{
+  width:100%;aspect-ratio:4/3;overflow:hidden;
+}
+
+.gallery-card img{
+  width:100%;height:100%;object-fit:cover;
+  transform:scale(1.08);
+  transition:transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.gallery-card.visible img{transform:scale(1);}
+.gallery-card:hover img{transform:scale(1.04)!important;}
+
+.gallery-caption{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,20,60,0.85));
+  color:white;padding:30px 16px 16px;
+}
+.gallery-caption h3{font-size:16px;font-weight:700;margin-bottom:4px;}
+.gallery-caption p{font-size:12px;color:rgba(255,255,255,0.8);}
+
+/* ========== SERVICES ========== */
+.services{
+  padding:40px 20px;
+  background:var(--bg-section-light);
+}
+
+.cards{
+  display:flex;flex-direction:column;gap:14px;
+}
+
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-left:4px solid #0070ba;
+  padding:18px 20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  transform:translateX(-30px);opacity:0;
+  transition:transform 0.5s ease,opacity 0.5s ease,background-color 0.3s ease,border-color 0.3s ease;
+}
+.card.visible{transform:translateX(0);opacity:1;}
+.card:nth-child(2){transition-delay:0.1s;}
+.card:nth-child(3){transition-delay:0.2s;}
+
+.card-icon{font-size:24px;margin-bottom:8px;}
+.card h3{font-size:15px;font-weight:700;color:var(--text-title);margin-bottom:6px;}
+.card p{font-size:13px;color:var(--text-secondary2);line-height:1.5;}
+
+/* ========== FOOTER ========== */
+footer{
+  background:#003087;color:white;
+  text-align:center;padding:24px 20px;margin-top:0;
+}
+footer .footer-logo{width:40px;margin:0 auto 10px;opacity:0.8;}
+footer p{font-size:12px;color:rgba(255,255,255,0.7);}
+
+/* ========== PAGE REGION PLEIN ECRAN ========== */
+.gallery-card{cursor:pointer;}
+
+.region-page{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:var(--bg-section-light);z-index:1000;
+  overflow-y:auto;
+  display:none;
+  opacity:0;transition:opacity 0.3s ease;
+}
+.region-page.active{display:block;opacity:1;}
+
+.region-page-hero{
+  position:relative;width:100%;height:50vh;min-height:320px;
+  background-size:cover;background-position:center;
+}
+.region-page-hero::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(0,48,135,0.15), rgba(0,48,135,0.6));
+}
+.region-page-back{
+  position:absolute;top:20px;left:20px;z-index:2;
+  background:rgba(255,255,255,0.9);border:none;
+  border-radius:50px;padding:10px 18px;
+  font-size:14px;font-weight:600;color:#003087;
+  cursor:pointer;display:flex;align-items:center;gap:6px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.15);
+}
+.region-page-back:hover{background:#fff;}
+.region-page-title{
+  position:absolute;bottom:24px;left:24px;right:24px;z-index:2;
+  color:#fff;font-size:32px;font-weight:800;
+  text-shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+.region-page-body{
+  max-width:720px;margin:0 auto;
+  padding:32px 24px 60px;
+}
+.region-page-body p{
+  color:var(--text-secondary);font-size:15px;line-height:1.8;margin-bottom:16px;
+}
+
+/* ========== MODALES (Connexion / Inscription / Rejoindre) ========== */
+.auth-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,10,30,0.6);
+  display:none;align-items:center;justify-content:center;
+  z-index:3000;padding:20px;
+  opacity:0;transition:opacity 0.25s ease;
+}
+.auth-overlay.show{display:flex;opacity:1;}
+
+.auth-modal{
+  background:var(--bg-card);
+  border-radius:16px;
+  width:100%;max-width:360px;
+  max-height:90vh;overflow-y:auto;
+  padding:28px 22px 24px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.3);
+  position:relative;
+  transform:scale(0.92) translateY(10px);
+  transition:transform 0.25s ease,background-color 0.3s ease;
+}
+.auth-overlay.show .auth-modal{transform:scale(1) translateY(0);}
+
+.auth-close{
+  position:absolute;top:12px;right:12px;
+  background:none;border:none;font-size:18px;
+  color:var(--text-secondary2);cursor:pointer;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:0.2s;
+}
+.auth-close:hover{background:var(--bg-section-alt);}
+.auth-close:active{transform:scale(0.9);}
+
+.auth-title{font-size:20px;font-weight:800;color:var(--text-title);margin-bottom:4px;}
+.auth-subtitle{font-size:13px;color:var(--text-secondary2);margin-bottom:20px;line-height:1.5;}
+
+.auth-field{margin-bottom:14px;display:flex;flex-direction:column;gap:6px;}
+.auth-field label{font-size:12px;font-weight:700;color:var(--menu-text);}
+.auth-field input,.auth-field select,.auth-field textarea{
+  padding:11px 14px;border-radius:10px;
+  border:1px solid var(--border-color);
+  background:var(--bg-section-alt);
+  color:var(--menu-text);
+  font-size:14px;outline:none;width:100%;
+  transition:border-color 0.2s,background-color 0.3s,color 0.3s;
+  font-family:inherit;
+}
+.auth-field input:focus,.auth-field select:focus,.auth-field textarea:focus{border-color:#0070ba;}
+.auth-field textarea{resize:vertical;min-height:70px;}
+
+.auth-submit{
+  width:100%;background:#0070ba;color:white;border:none;
+  padding:13px;border-radius:24px;font-weight:bold;font-size:14px;
+  cursor:pointer;transition:0.2s;margin-top:6px;
+}
+.auth-submit:hover{background:#005ea6;}
+.auth-submit:active{transform:scale(0.97);}
+
+.auth-switch{
+  text-align:center;font-size:13px;color:var(--text-secondary2);margin-top:16px;
+}
+.auth-switch a{color:#0070ba;font-weight:700;text-decoration:none;cursor:pointer;}
+
+.auth-success{text-align:center;padding:30px 10px 10px;}
+.auth-success .auth-success-icon{font-size:46px;margin-bottom:14px;}
+.auth-success h3{color:var(--text-title);font-size:18px;margin-bottom:8px;}
+.auth-success p{color:var(--text-secondary2);font-size:13px;line-height:1.6;}
+
+.auth-step{
+  display:inline-block;background:#0070ba;color:white;
+  font-size:11px;font-weight:bold;padding:3px 10px;
+  border-radius:20px;margin-bottom:10px;letter-spacing:0.5px;
+}
+
+/* Champ mot de passe avec oeil */
+.auth-password-wrap{position:relative;}
+.auth-password-wrap input{padding-right:42px;}
+
+/* Lignes de champs côte à côte (prénom/nom, date de naissance) */
+.auth-row{display:flex;gap:10px;}
+.auth-row .auth-field{flex:1;margin-bottom:14px;}
+.auth-row-3{display:flex;gap:8px;}
+.auth-row-3 select{flex:1;}
+
+/* Boutons radio "sexe" façon Facebook */
+.auth-radio-group{display:flex;gap:8px;flex-wrap:wrap;}
+.auth-radio{
+  flex:1;min-width:90px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 10px;border-radius:10px;
+  border:1px solid var(--border-color);
+  background:var(--bg-section-alt);
+  color:var(--menu-text);font-size:13px;font-weight:600;
+  cursor:pointer;transition:0.2s;
+}
+.auth-radio input{width:14px;height:14px;accent-color:#0070ba;cursor:pointer;}
+.auth-radio:has(input:checked){border-color:#0070ba;background:rgba(0,112,186,0.08);}
+
+/* Texte légal sous le formulaire d'inscription */
+.auth-legal{
+  font-size:11px;color:var(--text-secondary2);line-height:1.6;
+  margin:12px 0 4px;
+}
+
+/* Indication courte sous un champ */
+.auth-hint{font-size:11px;color:var(--text-secondary2);}
+
+/* Message d'erreur global (login / signup) */
+.auth-error-global{
+  display:block;background:rgba(224,51,77,0.1);color:#e0334d;
+  border:1px solid rgba(224,51,77,0.3);border-radius:8px;
+  padding:9px 12px;font-size:12px;margin-bottom:14px;line-height:1.5;
+}
+.auth-eye{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  cursor:pointer;color:var(--text-secondary2);
+  background:none;border:none;padding:6px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;transition:opacity 0.2s,color 0.2s;
+  opacity:0;pointer-events:none;
+}
+.auth-eye.show{opacity:1;pointer-events:auto;}
+.auth-eye svg{display:block;width:18px;height:18px;}
+.auth-eye:hover{color:#0070ba;}
+.auth-eye:active{transform:translateY(-50%) scale(0.9);}
+
+/* Mot de passe oublié */
+.auth-forgot{
+  text-align:right;font-size:12px;margin:-6px 0 14px;
+}
+.auth-forgot a{color:#0070ba;font-weight:700;text-decoration:none;cursor:pointer;}
+.auth-forgot a:hover{text-decoration:underline;}
+
+.auth-error{
+  display:block;color:#e0334d;font-size:12px;margin-top:4px;
+}
+.auth-password-wrap input.error,
+.auth-field input.error{border-color:#e0334d;}
+
+/* REDUCED MOTION */
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;}
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <img src="images/image1.png" class="logo-img" alt="Logo ADENOM">
+  <div class="header-right" id="headerRight">
+    <a href="#" class="btn-login" id="btnLogin" onclick="openAuthModal('login');return false;">Connexion</a>
+    <a href="#" class="btn-signup" id="btnSignup" onclick="openAuthModal('signup');return false;">Ouvrir un compte</a>
+    <img src="images/denom.png" id="memberBanner" class="member-banner" alt="ADENOM - 30e Anniversaire" style="display:none;">
+  </div>
+  <button class="hamburger" id="hamburgerBtn" onclick="openMenu()">☰</button>
+  <div class="profile-bubble-wrap" id="profileBubbleWrap" style="display:none;">
+    <button class="profile-bubble" id="profileBubble" onclick="toggleProfileMenu()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
+      <span class="profile-bubble-dot"></span>
+    </button>
+    <div class="profile-menu" id="profileMenu">
+      <div class="profile-menu-status">
+        <span class="profile-menu-icon" id="profileMenuIcon">⏳</span>
+        <div>
+          <strong id="profileMenuName">Compte en attente</strong>
+          <p id="profileMenuText">Votre demande d'adhésion est en cours de validation par l'administrateur.</p>
+        </div>
+      </div>
+      <div class="profile-menu-nav">
+        <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
+        <a href="#apropos" onclick="closeProfileMenu()">ℹ️ À propos</a>
+        <a href="#contact" onclick="closeProfileMenu()">📞 Contact</a>
+        <div class="menu-toggle-row">
+          <span>🌙 Mode sombre</span>
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggleProfile" onchange="toggleDarkMode(this)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+      <button class="profile-menu-logout" onclick="logoutProfile()">Se déconnecter</button>
+    </div>
+  </div>
+</header>
+
+<div id="sideMenu" class="side-menu">
+  <a href="#" onclick="closeMenu()">✕ Fermer</a>
+  <a href="#hero" onclick="closeMenu()">🏠 Accueil</a>
+  <a href="#apropos" onclick="closeMenu()">ℹ️ À propos</a>
+  <a href="#contact" onclick="closeMenu()">📞 Contact</a>
+  <div class="menu-toggle-row">
+    <span>🌙 Mode sombre</span>
+    <label class="switch">
+      <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)">
+      <span class="switch-slider"></span>
+    </label>
+  </div>
+</div>
+<div id="overlay" class="overlay" onclick="closeMenu()"></div>
+
+<!-- HERO avec zoom parallax -->
+<section class="hero" id="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <span class="hero-badge">🌊 Mahajanga · Madagascar</span>
+    <h2 class="hero-subtitle">Zanak'i Moujanga,<br>Tsy mideky fa Miranga</h2>
+    <p class="hero-text">
+      ADENOM est une communauté d'étudiants issus de plusieurs établissements d'enseignement supérieur, unis par l'entraide, le partage de connaissances et la réussite collective.
+    </p>
+    <a href="#" class="hero-cta" onclick="openAuthModal('join');return false;">Rejoindre la communauté →</a>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-arrow"></div>
+    <span>DÉFILER</span>
+  </div>
+</section>
+
+<!-- 30 ANS -->
+<section class="anniversary-section" id="anniversarySection">
+  <div class="anniv-zoom-container">
+    <img src="images/image1.png" class="anniv-img" id="annivImg" alt="30 ans ADENOM">
+  </div>
+  <p class="anniv-title">30 ans d'excellence</p>
+  <p class="anniv-subtitle">Depuis 1996, ADENOM accompagne les étudiants de Mahajanga vers un avenir meilleur, ensemble et solidaires.</p>
+  <div class="anniv-years">
+    <span class="year-pill">1996</span>
+    <span style="color:#0070ba;font-weight:bold;align-self:center;">→</span>
+    <span class="year-pill">2026</span>
+  </div>
+</section>
+
+<!-- GALERIE -->
+<section class="gallery-section">
+  <p class="section-label">Notre ville</p>
+  <h2 class="section-title">Mahajanga, notre racine</h2>
+
+  <div class="gallery-card" id="card1" onclick="openRegionModal('boeny', this)">
+    <div class="img-wrap">
+      <img src="images/image3.jpg" alt="Port de Mahajanga">
+    </div>
+    <div class="gallery-caption">
+      <h3>🌊 Le port de Majunga</h3>
+      <p>La presqu'île emblématique, coeur battant de la ville</p>
+    </div>
+  </div>
+
+  <div class="gallery-card" id="card2" onclick="openRegionModal('melaky', this)">
+    <div class="img-wrap">
+      <img src="images/image4.jpg" alt="Quartiers de Mahajanga">
+    </div>
+    <div class="gallery-caption">
+      <h3>🏘️ Les quartiers de Maintirano</h3>
+      <p>La vie animée des rues de Mahajanga vue du ciel</p>
+    </div>
+  </div>
+
+  <div class="gallery-card" id="card3" onclick="openRegionModal('betsiboka', this)">
+    <div class="img-wrap">
+      <img src="images/image2.jpg" alt="Paysage naturel de Mahajanga">
+    </div>
+    <div class="gallery-caption">
+      <h3>🌿 Paysages naturels de Betsiboka</h3>
+      <p>La beauté sauvage de Betsiboka</p>
+    </div>
+  </div>
+</section>
+
+<!-- À PROPOS -->
+<section class="services" id="apropos">
+  <p class="section-label">À propos</p>
+  <h2 class="section-title">Qui sommes-nous ?</h2>
+  <div class="cards">
+    <div class="card" id="srv1">
+      <div class="card-icon">🌳</div>
+      <h3>Notre histoire</h3>
+      <p>Depuis 1996, ADENOM regroupe les étudiants originaires de Mahajanga poursuivant leurs études dans différents établissements, autour de valeurs d'entraide et de solidarité.</p>
+    </div>
+    <div class="card" id="srv2">
+      <div class="card-icon">🎯</div>
+      <h3>Notre mission</h3>
+      <p>Accompagner chaque membre dans son parcours académique, faciliter l'intégration et favoriser le partage de connaissances entre étudiants.</p>
+    </div>
+    <div class="card" id="srv3">
+      <div class="card-icon">🤝</div>
+      <h3>Notre communauté</h3>
+      <p>Une grande famille unie, fière de ses racines, qui célèbre cette année ses 30 ans d'existence au service de la jeunesse de Mahajanga.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PAGE REGION PLEIN ECRAN -->
+<div class="region-page" id="regionPage">
+  <div class="region-page-hero" id="regionPageHero">
+    <button class="region-page-back" onclick="closeRegionPage()">← Retour</button>
+    <div class="region-page-title" id="regionPageTitle"></div>
+  </div>
+  <div class="region-page-body" id="regionPageBody"></div>
+</div>
+
+<!-- MODALES Connexion / Inscription / Rejoindre -->
+<div class="auth-overlay" id="authOverlay" onclick="closeAuthOnOverlay(event)">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuthModal()">✕</button>
+
+    <!-- CONNEXION -->
+    <div id="authLogin" class="auth-panel">
+      <div class="auth-title">Connexion</div>
+      <p class="auth-subtitle">Accédez à votre espace membre ADENOM.</p>
+      <span class="auth-error auth-error-global" id="loginGlobalError" style="display:none;"></span>
+      <form onsubmit="return handleAuthSubmit(event,'login')">
+        <div class="auth-field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="loginEmail" required placeholder="exemple@email.com">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="loginPassword" required placeholder="••••••••">
+            <button type="button" class="auth-eye" onclick="togglePassword(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="auth-forgot"><a onclick="goToPanel('forgot')">Mot de passe oublié ?</a></p>
+        <button type="submit" class="auth-submit" id="loginSubmitBtn">Se connecter</button>
+      </form>
+      <p class="auth-switch">Pas encore de compte ? <a onclick="goToPanel('signup')">Ouvrir un compte</a></p>
+    </div>
+
+    <!-- OUVRIR UN COMPTE -->
+    <div id="authSignup" class="auth-panel" style="display:none;">
+      <span class="auth-step" id="signupStepBadge" style="display:none;">Étape 1/2</span>
+      <div class="auth-title" id="authSignupTitle">Inscription</div>
+      <p class="auth-subtitle" id="authSignupSubtitle">C'est rapide et facile.</p>
+      <span class="auth-error auth-error-global" id="signupGlobalError" style="display:none;"></span>
+      <form onsubmit="return handleAuthSubmit(event,'signup')">
+        <div class="auth-row">
+          <div class="auth-field">
+            <label>Prénom</label>
+            <input type="text" id="signupFirstName" required placeholder="Prénom">
+          </div>
+          <div class="auth-field">
+            <label>Nom</label>
+            <input type="text" id="signupLastName" required placeholder="Nom">
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Adresse e-mail</label>
+          <input type="email" id="signupEmail" required placeholder="exemple@email.com">
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="signupPassword" required minlength="6" placeholder="Nouveau mot de passe">
+            <button type="button" class="auth-eye" onclick="togglePassword(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="auth-hint">6 caractères minimum.</span>
+        </div>
+        <div class="auth-field">
+          <label>Confirmer votre mot de passe</label>
+          <div class="auth-password-wrap">
+            <input type="password" id="signupPasswordConfirm" required placeholder="••••••••">
+            <button type="button" class="auth-eye" onclick="togglePassword(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="auth-error" id="signupPasswordError" style="display:none;">Les mots de passe ne correspondent pas.</span>
+        </div>
+        <div class="auth-field">
+          <label>Date de naissance</label>
+          <div class="auth-row auth-row-3">
+            <select id="signupBirthDay" required>
+              <option value="">Jour</option>
+              <!-- options générées en JS -->
+            </select>
+            <select id="signupBirthMonth" required>
+              <option value="">Mois</option>
+              <option value="01">Janvier</option>
+              <option value="02">Février</option>
+              <option value="03">Mars</option>
+              <option value="04">Avril</option>
+              <option value="05">Mai</option>
+              <option value="06">Juin</option>
+              <option value="07">Juillet</option>
+              <option value="08">Août</option>
+              <option value="09">Septembre</option>
+              <option value="10">Octobre</option>
+              <option value="11">Novembre</option>
+              <option value="12">Décembre</option>
+            </select>
+            <select id="signupBirthYear" required>
+              <option value="">Année</option>
+              <!-- options générées en JS -->
+            </select>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Sexe</label>
+          <div class="auth-radio-group">
+            <label class="auth-radio"><input type="radio" name="signupGender" value="femme" required><span>Femme</span></label>
+            <label class="auth-radio"><input type="radio" name="signupGender" value="homme" required><span>Homme</span></label>
+            <label class="auth-radio"><input type="radio" name="signupGender" value="autre" required><span>Autre</span></label>
+          </div>
+        </div>
+        <p class="auth-legal">
+          En cliquant sur Inscription, vous acceptez nos Conditions générales et notre Politique de confidentialité.
+        </p>
+        <button type="submit" class="auth-submit" id="signupSubmitBtn">Inscription</button>
+      </form>
+      <p class="auth-switch" id="authSignupSwitch">Déjà inscrit ? <a onclick="goToPanel('login')">Se connecter</a></p>
+    </div>
+
+    <!-- REJOINDRE LA COMMUNAUTE -->
+    <div id="authJoin" class="auth-panel" style="display:none;">
+      <span class="auth-step" id="joinStepBadge" style="display:none;">Étape 2/2</span>
+      <div class="auth-title">Rejoindre la communauté</div>
+      <p class="auth-subtitle">Tous les champs sont obligatoires pour finaliser votre adhésion.</p>
+      <form onsubmit="return handleAuthSubmit(event,'join')">
+        <div class="auth-field">
+          <label>Numéro CIN</label>
+          <input type="text" id="joinCIN" required inputmode="numeric" maxlength="14" pattern="\d{14}" placeholder="14 chiffres">
+          <span class="auth-error" id="joinCINError" style="display:none;">Le numéro CIN doit contenir exactement 14 chiffres.</span>
+        </div>
+        <div class="auth-field">
+          <label>École</label>
+          <input type="text" id="joinSchool" required placeholder="Ex : Université de Mahajanga">
+        </div>
+        <div class="auth-field">
+          <label>Filière et parcours</label>
+          <input type="text" id="joinField" required placeholder="Ex : Droit - Affaires">
+        </div>
+        <div class="auth-field">
+          <label>Niveau</label>
+          <input type="text" id="joinLevel" required placeholder="Ex : L1, L2, L3, M1, M2...">
+        </div>
+        <div class="auth-field">
+          <label>Année promotion ADENOM</label>
+          <input type="text" id="joinPromotion" required inputmode="numeric" placeholder="Ex : 2026">
+        </div>
+        <div class="auth-field">
+          <label>Poste</label>
+          <input type="text" id="joinRole" required placeholder="Ex : Membre, Responsable...">
+        </div>
+        <div class="auth-field">
+          <label>Numéro joignable</label>
+          <input type="tel" id="joinPhone" required placeholder="03X XX XXX XX">
+        </div>
+        <span class="auth-error auth-error-global" id="joinGlobalError" style="display:none;"></span>
+        <button type="submit" class="auth-submit" id="joinSubmitBtn">Envoyer ma demande</button>
+      </form>
+    </div>
+
+    <!-- MOT DE PASSE OUBLIE -->
+    <div id="authForgot" class="auth-panel" style="display:none;">
+      <div class="auth-title">Mot de passe oublié</div>
+      <p class="auth-subtitle">Indiquez votre email, nous vous envoyons un lien pour réinitialiser votre mot de passe.</p>
+      <form onsubmit="return handleAuthSubmit(event,'forgot')">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="forgotEmail" required placeholder="exemple@email.com">
+        </div>
+        <button type="submit" class="auth-submit">Envoyer le lien</button>
+      </form>
+      <p class="auth-switch">Retour à la <a onclick="goToPanel('login')">connexion</a></p>
+    </div>
+
+    <!-- SUCCES -->
+    <div id="authSuccess" class="auth-success" style="display:none;">
+      <div class="auth-success-icon">✅</div>
+      <h3 id="authSuccessTitle">Merci !</h3>
+      <p id="authSuccessText">Votre demande a bien été envoyée.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer id="contact">
+  <img src="images/image1.png" class="footer-logo" alt="ADENOM">
+  <p>© 2026 ADENOM · Tous droits réservés</p>
+</footer>
+
+<script>
+
+/* Chargement image hero via JS pour alléger le HTML */
+const _heroBgData = 'images/image3.jpg';
+document.getElementById('heroBg').style.backgroundImage = "url('" + _heroBgData + "')";
+
+/* MODALES Connexion / Inscription / Rejoindre */
+let authFlow = null; // 'join' = l'utilisateur veut rejoindre la communauté (passe d'abord par la création de compte)
+
+function openAuthModal(type){
+  document.getElementById('authOverlay').classList.add('show');
+  if(type === 'join'){
+    if(currentUser){
+      // Déjà connecté : on passe directement au formulaire d'adhésion
+      authFlow = null;
+      switchAuthPanel('join');
+    } else {
+      authFlow = 'join';
+      switchAuthPanel('signup');
+    }
+  } else {
+    authFlow = null;
+    switchAuthPanel(type);
+  }
+  document.body.style.overflow = 'hidden';
+}
+function closeAuthModal(){
+  document.getElementById('authOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  authFlow = null;
+}
+function closeAuthOnOverlay(e){
+  if(e.target.id === 'authOverlay') closeAuthModal();
+}
+function goToPanel(type){
+  authFlow = null;
+  switchAuthPanel(type);
+}
+function switchAuthPanel(type){
+  const ids = {login:'authLogin', signup:'authSignup', join:'authJoin', forgot:'authForgot', success:'authSuccess'};
+  Object.keys(ids).forEach(key => {
+    const el = document.getElementById(ids[key]);
+    if(el) el.style.display = (key === type) ? '' : 'none';
+  });
+  updateAuthTexts();
+}
+function updateAuthTexts(){
+  const signupBadge = document.getElementById('signupStepBadge');
+  const joinBadge = document.getElementById('joinStepBadge');
+  const signupTitle = document.getElementById('authSignupTitle');
+  const signupSubtitle = document.getElementById('authSignupSubtitle');
+  const signupSwitch = document.getElementById('authSignupSwitch');
+
+  if(authFlow === 'join'){
+    if(signupBadge) signupBadge.style.display = '';
+    if(joinBadge) joinBadge.style.display = '';
+    if(signupTitle) signupTitle.textContent = 'Créez votre compte';
+    if(signupSubtitle) signupSubtitle.textContent = 'Avant de rejoindre la communauté, créez votre compte ADENOM.';
+    if(signupSwitch) signupSwitch.style.display = 'none';
+  } else {
+    if(signupBadge) signupBadge.style.display = 'none';
+    if(joinBadge) joinBadge.style.display = 'none';
+    if(signupTitle) signupTitle.textContent = 'Ouvrir un compte';
+    if(signupSubtitle) signupSubtitle.textContent = 'Rejoignez la plateforme ADENOM en quelques secondes.';
+    if(signupSwitch) signupSwitch.style.display = '';
+  }
+}
+/* ========== AUTHENTIFICATION : appels au backend ========== */
+const API_BASE = ''; // même origine (servi par le serveur Node)
+
+async function apiRequest(path, options = {}){
+  const res = await fetch(API_BASE + path, {
+    method: options.method || 'GET',
+    headers: { 'Content-Type': 'application/json', ...(options.headers||{}) },
+    credentials: 'include',
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  let data = {};
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){
+    const err = new Error(data.error || 'Une erreur est survenue.');
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function showFieldError(id, message){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = message;
+  el.style.display = 'block';
+}
+function hideFieldError(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.display = 'none';
+  el.textContent = '';
+}
+function setSubmitLoading(btnId, loading, normalLabel){
+  const btn = document.getElementById(btnId);
+  if(!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Veuillez patienter…' : normalLabel;
+}
+
+/* Génère les options "Jour" et "Année" du sélecteur de date de naissance */
+(function populateBirthDateSelectors(){
+  const daySelect = document.getElementById('signupBirthDay');
+  const yearSelect = document.getElementById('signupBirthYear');
+  if(daySelect){
+    for(let d = 1; d <= 31; d++){
+      const opt = document.createElement('option');
+      opt.value = String(d).padStart(2,'0');
+      opt.textContent = d;
+      daySelect.appendChild(opt);
+    }
+  }
+  if(yearSelect){
+    const currentYear = new Date().getFullYear();
+    for(let y = currentYear - 13; y >= currentYear - 100; y--){
+      const opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
+    }
+  }
+})();
+
+async function handleAuthSubmit(e, type){
+  e.preventDefault();
+
+  // ---------- CONNEXION ----------
+  if(type === 'login'){
+    hideFieldError('loginGlobalError');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    setSubmitLoading('loginSubmitBtn', true, 'Se connecter');
+    try{
+      const { user } = await apiRequest('/api/login', { method:'POST', body:{ email, password } });
+      currentUser = user;
+      document.getElementById('authSuccessTitle').textContent = 'Connexion réussie !';
+      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} !`;
+      authFlow = null;
+      switchAuthPanel('success');
+      setTimeout(closeAuthModal, 1600);
+      updateAccountUI();
+    }catch(err){
+      showFieldError('loginGlobalError', err.message);
+    }finally{
+      setSubmitLoading('loginSubmitBtn', false, 'Se connecter');
+    }
+    return false;
+  }
+
+  // ---------- INSCRIPTION ----------
+  if(type === 'signup'){
+    hideFieldError('signupGlobalError');
+
+    const pwd = document.getElementById('signupPassword');
+    const confirm = document.getElementById('signupPasswordConfirm');
+    const pwdError = document.getElementById('signupPasswordError');
+    if(pwd.value !== confirm.value){
+      confirm.classList.add('error');
+      pwdError.style.display = 'block';
+      confirm.focus();
+      return false;
+    } else {
+      confirm.classList.remove('error');
+      pwdError.style.display = 'none';
+    }
+
+    const firstName = document.getElementById('signupFirstName').value.trim();
+    const lastName = document.getElementById('signupLastName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = pwd.value;
+    const day = document.getElementById('signupBirthDay').value;
+    const month = document.getElementById('signupBirthMonth').value;
+    const year = document.getElementById('signupBirthYear').value;
+    const genderInput = document.querySelector('input[name="signupGender"]:checked');
+    const gender = genderInput ? genderInput.value : null;
+    const birthDate = (day && month && year) ? `${year}-${month}-${day}` : null;
+
+    setSubmitLoading('signupSubmitBtn', true, 'Inscription');
+    try{
+      const { user } = await apiRequest('/api/register', {
+        method:'POST',
+        body:{ firstName, lastName, email, password, birthDate, gender }
+      });
+      currentUser = user;
+
+      // Si on est dans le flux "Rejoindre la communauté", on enchaîne
+      // directement sur le formulaire d'adhésion.
+      if(authFlow === 'join'){
+        switchAuthPanel('join');
+        return false;
+      }
+
+      document.getElementById('authSuccessTitle').textContent = 'Compte créé !';
+      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} ! Votre compte ADENOM est prêt.`;
+      switchAuthPanel('success');
+      setTimeout(closeAuthModal, 1800);
+      updateAccountUI();
+    }catch(err){
+      showFieldError('signupGlobalError', err.message);
+    }finally{
+      setSubmitLoading('signupSubmitBtn', false, 'Inscription');
+    }
+    return false;
+  }
+
+  // ---------- REJOINDRE LA COMMUNAUTE ----------
+  if(type === 'join'){
+    hideFieldError('joinGlobalError');
+
+    const cin = document.getElementById('joinCIN');
+    const cinError = document.getElementById('joinCINError');
+    const digitsOnly = /^\d{14}$/.test(cin.value.trim());
+    if(!digitsOnly){
+      cin.classList.add('error');
+      cinError.style.display = 'block';
+      cin.focus();
+      return false;
+    } else {
+      cin.classList.remove('error');
+      cinError.style.display = 'none';
+    }
+
+    const details = {
+      cin: cin.value.trim(),
+      school: document.getElementById('joinSchool').value.trim(),
+      field: document.getElementById('joinField').value.trim(),
+      level: document.getElementById('joinLevel').value.trim(),
+      promotion: document.getElementById('joinPromotion').value.trim(),
+      role: document.getElementById('joinRole').value.trim(),
+      phone: document.getElementById('joinPhone').value.trim()
+    };
+    const message = JSON.stringify(details);
+
+    setSubmitLoading('joinSubmitBtn', true, 'Envoyer ma demande');
+    try{
+      const { user } = await apiRequest('/api/join', { method:'POST', body:{ message } });
+      currentUser = user;
+
+      document.getElementById('authSuccessTitle').textContent = 'Demande envoyée !';
+      document.getElementById('authSuccessText').textContent = 'Merci pour votre intérêt, nous reviendrons vers vous très bientôt.';
+      authFlow = null;
+      switchAuthPanel('success');
+      setTimeout(closeAuthModal, 2200);
+      updateAccountUI();
+    }catch(err){
+      showFieldError('joinGlobalError', err.message);
+    }finally{
+      setSubmitLoading('joinSubmitBtn', false, 'Envoyer ma demande');
+    }
+    return false;
+  }
+
+  // ---------- MOT DE PASSE OUBLIE ----------
+  if(type === 'forgot'){
+    // Pas de service d'envoi d'email disponible : on confirme simplement la
+    // réception de la demande côté interface.
+    document.getElementById('authSuccessTitle').textContent = 'Demande envoyée !';
+    document.getElementById('authSuccessText').textContent = "Si un compte existe avec cet email, des instructions vous seront envoyées.";
+    switchAuthPanel('success');
+    setTimeout(closeAuthModal, 2200);
+    return false;
+  }
+
+  return false;
+}
+
+/* Afficher / masquer le mot de passe */
+const EYE_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_CLOSED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.45 18.45 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+function togglePassword(btn){
+  const input = btn.previousElementSibling;
+  if(input.type === 'password'){
+    input.type = 'text';
+    btn.innerHTML = EYE_CLOSED;
+  } else {
+    input.type = 'password';
+    btn.innerHTML = EYE_OPEN;
+  }
+}
+
+// Affiche l'oeil uniquement quand l'utilisateur a saisi quelque chose
+document.querySelectorAll('.auth-password-wrap input').forEach(input => {
+  const eyeBtn = input.nextElementSibling;
+  if(!eyeBtn) return;
+  input.addEventListener('input', () => {
+    eyeBtn.classList.toggle('show', input.value.length > 0);
+    if(input.value.length === 0){
+      input.type = 'password';
+      eyeBtn.innerHTML = EYE_OPEN;
+    }
+  });
+});
+
+// Efface les messages d'erreur dès que l'utilisateur corrige le champ
+['joinCIN','signupPasswordConfirm'].forEach(id => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', () => {
+    el.classList.remove('error');
+    const err = document.getElementById(id === 'joinCIN' ? 'joinCINError' : 'signupPasswordError');
+    if(err) err.style.display = 'none';
+  });
+});
+
+/* MODE SOMBRE */
+function toggleDarkMode(sourceEl){
+  const enabled = sourceEl.checked;
+  document.body.classList.toggle('dark-mode', enabled);
+  try{ localStorage.setItem('adenom-dark-mode', enabled ? '1' : '0'); }catch(e){}
+  // Synchronise l'autre toggle (side-menu ou profile-menu)
+  ['darkModeToggle','darkModeToggleProfile'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el !== sourceEl) el.checked = enabled;
+  });
+}
+
+// Applique la préférence sauvegardée au chargement
+(function initDarkMode(){
+  let saved = null;
+  try{ saved = localStorage.getItem('adenom-dark-mode'); }catch(e){}
+  if(saved === '1'){
+    document.body.classList.add('dark-mode');
+    ['darkModeToggle','darkModeToggleProfile'].forEach(id => {
+      const toggle = document.getElementById(id);
+      if(toggle) toggle.checked = true;
+    });
+  }
+})();
+
+/* MENU */
+function openMenu(){
+  document.getElementById("sideMenu").classList.add("open");
+  document.getElementById("overlay").classList.add("show");
+}
+function closeMenu(){
+  document.getElementById("sideMenu").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+/* ========== ETAT DU COMPTE (session backend) ========== */
+let currentUser = null;
+
+function updateAccountUI(){
+  const btnLogin = document.getElementById('btnLogin');
+  const btnSignup = document.getElementById('btnSignup');
+  const profileWrap = document.getElementById('profileBubbleWrap');
+  const hamburger = document.getElementById('hamburgerBtn');
+  const memberBanner = document.getElementById('memberBanner');
+  const nameEl = document.getElementById('profileMenuName');
+  const textEl = document.getElementById('profileMenuText');
+  const iconEl = document.getElementById('profileMenuIcon');
+  const dot = document.querySelector('.profile-bubble-dot');
+
+  const isLoggedIn = !!currentUser;
+
+  if(isLoggedIn){
+    if(btnLogin) btnLogin.style.display = 'none';
+    if(btnSignup) btnSignup.style.display = 'none';
+    if(hamburger) hamburger.style.display = 'none';
+    if(profileWrap) profileWrap.style.display = '';
+    if(memberBanner) memberBanner.style.display = '';
+
+    const fullName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+    if(currentUser.accountStatus === 'pending'){
+      if(nameEl) nameEl.textContent = 'Compte en attente';
+      if(textEl) textEl.textContent = `Bonjour ${fullName}, votre demande d'adhésion est en cours de validation par l'administrateur.`;
+      if(iconEl) iconEl.textContent = '⏳';
+      if(dot) dot.style.background = '#f5a623';
+    } else if(currentUser.accountStatus === 'member'){
+      if(nameEl) nameEl.textContent = fullName || 'Membre ADENOM';
+      if(textEl) textEl.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
+      if(iconEl) iconEl.textContent = '✅';
+      if(dot) dot.style.background = '#2ecc71';
+    } else {
+      if(nameEl) nameEl.textContent = fullName || 'Mon compte';
+      if(textEl) textEl.textContent = 'Votre compte est actif. Rejoignez la communauté pour devenir membre.';
+      if(iconEl) iconEl.textContent = '👤';
+      if(dot) dot.style.background = '#0070ba';
+    }
+  } else {
+    if(btnLogin) btnLogin.style.display = '';
+    if(btnSignup) btnSignup.style.display = '';
+    if(hamburger) hamburger.style.display = '';
+    if(profileWrap) profileWrap.style.display = 'none';
+    if(memberBanner) memberBanner.style.display = 'none';
+    closeProfileMenu();
+  }
+}
+
+function toggleProfileMenu(){
+  document.getElementById('profileMenu').classList.toggle('open');
+}
+function closeProfileMenu(){
+  const menu = document.getElementById('profileMenu');
+  if(menu) menu.classList.remove('open');
+}
+
+async function logoutProfile(){
+  try{ await apiRequest('/api/logout', { method:'POST' }); }catch(e){}
+  currentUser = null;
+  closeProfileMenu();
+  updateAccountUI();
+}
+
+// Ferme le menu de profil si on clique ailleurs
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('profileBubbleWrap');
+  if(!wrap) return;
+  if(!wrap.contains(e.target)){
+    closeProfileMenu();
+  }
+});
+
+// Récupère la session courante au chargement de la page
+(async function initAccountState(){
+  try{
+    const { user } = await apiRequest('/api/me');
+    currentUser = user;
+  }catch(e){
+    currentUser = null;
+  }
+  updateAccountUI();
+})();
+
+/* HERO PARALLAX ZOOM */
+const heroBg = document.getElementById('heroBg');
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  const heroH = document.getElementById('hero').offsetHeight;
+  if(scrollY <= heroH){
+    const progress = scrollY / heroH;
+    // Zoom in de 1.15 → 1.35 pendant le scroll
+    const scale = 1.15 + progress * 0.20;
+    heroBg.style.transform = `scale(${scale})`;
+  }
+}, {passive:true});
+
+/* HEADER : disparaît au scroll vers le bas, réapparaît au scroll vers le haut */
+const siteHeader = document.querySelector('header');
+let lastScrollY = window.scrollY;
+window.addEventListener('scroll', () => {
+  const currentScrollY = window.scrollY;
+  const sideMenuOpen = document.getElementById('sideMenu')?.classList.contains('open');
+  const profileMenuOpen = document.getElementById('profileMenu')?.classList.contains('open');
+  if(sideMenuOpen || profileMenuOpen){
+    lastScrollY = currentScrollY;
+    return;
+  }
+  if(currentScrollY > lastScrollY && currentScrollY > 60){
+    siteHeader.classList.add('hide-on-scroll');
+  } else {
+    siteHeader.classList.remove('hide-on-scroll');
+  }
+  lastScrollY = currentScrollY;
+}, {passive:true});
+
+/* INTERSECTION OBSERVER pour animations au scroll */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('visible');
+    }
+  });
+}, {threshold: 0.2});
+
+// Gallery cards
+['card1','card2','card3'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) observer.observe(el);
+});
+
+// Services
+['srv1','srv2','srv3'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) observer.observe(el);
+});
+
+// Anniversary zoom
+const annivEl = document.getElementById('annivImg');
+if(annivEl) observer.observe(annivEl);
+
+/* ========== PAGE REGION PLEIN ECRAN ========== */
+const regionData = {
+  boeny: {
+    title: "Région Boeny",
+    image: "images/image3.jpg",
+    html: `
+      <p>Boeny est une région du nord-ouest de Madagascar, dont la capitale est Mahajanga. Elle s'étend sur 31 046 km², avec une population estimée à environ 931 000 habitants (recensement 2018). Elle est frontalière des régions de Sofia au nord-est, de Betsiboka au sud et de Melaky à l'ouest.</p>
+      <p>Avec 690 km de littoral, elle est classée deuxième grenier de Madagascar et première cité de la crevette. La région compte six districts, dont Mahajanga I (chef-lieu), Mahajanga II, Soalala, Mitsinjo, Marovoay et Ambato Boeny. Son hydrologie est marquée par le lac Kinkony et de grands fleuves comme la Betsiboka, la Mahavavy et la Mahajamba.</p>
+      <p>Sa population est composée d'ethnies diverses, avec une prédominance sakalava sur les zones côtières, fruit d'une longue histoire d'échanges avec le monde arabe, l'Inde et l'Afrique. La région abrite plusieurs aires protégées importantes, notamment le parc national d'Ankarafantsika, les Tsingy de Namoroka et la Baie de Baly.</p>
+    `
+  },
+  melaky: {
+    title: "Région Melaky",
+    image: "images/image4.jpg",
+    html: `
+      <p>Melaky est une région du centre-ouest de Madagascar, dont la capitale est Maintirano, une ville côtière sur le canal du Mozambique. Elle est bordée par la région de Boeny au nord-est, Betsiboka à l'est, Bongolava au sud-est et Menabe au sud, sur une superficie de 38 852 km² avec une population de 309 805 habitants (2018) — c'est la région la moins peuplée et la moins densément peuplée de Madagascar.</p>
+      <p>La population est majoritairement sakalava. La région est divisée en cinq districts : Ambatomainty, Antsalova, Besalampy, Maintirano et Morafenobe. Elle abrite des réserves naturelles importantes comme les réserves de Maningoza et de Bemarivo, ainsi que les Tsingy de Beanka, un massif karstique remarquable.</p>
+      <p>L'économie locale repose largement sur la pêche, l'élevage et l'agriculture (riz, coprah, raphia, bananes).</p>
+    `
+  },
+  betsiboka: {
+    title: "Région Betsiboka",
+    image: "images/image2.jpg",
+    html: `
+      <p>Betsiboka est une région du nord de Madagascar, dont la capitale est Maevatanana, sur l'Ikopa. Jusqu'en 2009, elle appartenait à la province de Mahajanga. Elle s'étend sur 30 025 km² avec une population de 394 561 habitants (2018), ce qui en fait une des régions les moins densément peuplées du pays.</p>
+      <p>Elle est frontalière des régions de Boeny au nord, Sofia au nord-est, Alaotra-Mangoro à l'est, Analamanga et Bongolava au sud, et Melaky à l'ouest, et est divisée en trois districts : Kandreho, Maevatanana et Tsaratanana.</p>
+      <p>La région est connue pour ses importantes exploitations d'or, notamment dans le district de Maevatanana, où environ 20 kg d'or sont extraits chaque semaine. Elle abrite également la réserve de Kasijy et des sites fossilifères notables près de Berivotra.</p>
+    `
+  }
+};
+
+function openRegionModal(key, cardEl){
+  const data = regionData[key];
+  if(!data) return;
+
+  // Utilise l'image de la carte qui vient d'être cliquée
+  let imgSrc = data.image;
+  if(cardEl){
+    const cardImg = cardEl.querySelector('img');
+    if(cardImg) imgSrc = cardImg.getAttribute('src');
+  }
+
+  document.getElementById('regionPageHero').style.backgroundImage = `url('${imgSrc}')`;
+  document.getElementById('regionPageTitle').textContent = data.title;
+  document.getElementById('regionPageBody').innerHTML = data.html;
+
+  const page = document.getElementById('regionPage');
+  page.classList.add('active');
+  page.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRegionPage(){
+  document.getElementById('regionPage').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+</script>
+</body>
+</html>
