@@ -53,22 +53,25 @@ serverless).
    (`users`, `sessions`) est créé automatiquement au premier appel de l'API
    (voir `lib/db.js`, fonction `init()`).
 
-## 2️⃣ Confirmation d'email (Resend) — optionnel mais recommandé
+## 2️⃣ Confirmation d'email (Brevo — gratuit, sans nom de domaine)
 
-Pour envoyer l'email de confirmation à l'inscription, il faut :
+Pour envoyer l'email de confirmation à l'inscription :
 
-1. Posséder un **nom de domaine** (ex: `adenom.org`)
-2. Créer un compte sur https://resend.com (gratuit)
-3. Dans "Domains", ajouter votre domaine et configurer les enregistrements DNS
-   fournis (SPF, DKIM) chez votre registrar — vérification généralement sous 1h
-4. Dans "API Keys", créer une clé API
-5. Récupérer :
-   - `RESEND_API_KEY` (la clé créée)
-   - `RESEND_FROM_EMAIL` (ex: `ADENOM <noreply@adenom.org>`, doit utiliser le domaine vérifié)
+1. Créez un compte sur https://brevo.com (gratuit, 300 emails/jour à vie)
+2. Allez dans **Senders, Domains & IPs → Senders** et ajoutez une adresse
+   expéditrice (par exemple votre Gmail, ex: `adenom.contact@gmail.com`)
+3. Brevo envoie un code à 6 chiffres à cette adresse — entrez-le pour la valider
+4. Allez dans **SMTP & API → API Keys** et créez une nouvelle clé API
+5. Récupérez :
+   - `BREVO_API_KEY` (la clé créée)
+   - `BREVO_FROM_EMAIL` (l'adresse vérifiée à l'étape 2)
+   - `BREVO_FROM_NAME` (optionnel, ex: `ADENOM`)
 
 > Si ces variables ne sont pas configurées, l'inscription fonctionne quand même
 > normalement — l'email de confirmation est simplement ignoré (un message est
-> écrit dans les logs Vercel).
+> écrit dans les logs Vercel). Tant que l'email n'est pas confirmé, le compte
+> peut se connecter normalement mais ne peut pas envoyer de demande d'adhésion
+> ("Rejoindre la communauté").
 
 ## 3️⃣ Déployer sur Vercel
 
@@ -83,8 +86,9 @@ Pour envoyer l'email de confirmation à l'inscription, il faut :
    | `TURSO_DATABASE_URL` | (obtenu à l'étape 1) |
    | `TURSO_AUTH_TOKEN` | (obtenu à l'étape 1) |
    | `ADMIN_CODE` | un code secret de votre choix (remplace la valeur par défaut) |
-   | `RESEND_API_KEY` | (obtenu à l'étape 2, optionnel) |
-   | `RESEND_FROM_EMAIL` | (obtenu à l'étape 2, optionnel) |
+   | `BREVO_API_KEY` | (obtenu à l'étape 2, optionnel) |
+   | `BREVO_FROM_EMAIL` | (obtenu à l'étape 2, optionnel) |
+   | `BREVO_FROM_NAME` | ex: `ADENOM` (optionnel) |
    | `SITE_URL` | l'URL de votre projet Vercel, ex: `https://adenom-backend.vercel.app` (optionnel, requis pour le lien de confirmation) |
 5. Cliquez **Deploy**. Votre site est en ligne sur `https://votre-projet.vercel.app`.
 
@@ -118,6 +122,7 @@ et les fonctions `api/*` sur `http://localhost:3000`.
 | POST | `/api/logout` | Déconnexion |
 | GET | `/api/me` | Utilisateur courant |
 | GET | `/api/verify-email?token=...` | Confirme l'adresse e-mail (lien cliqué) |
+| POST | `/api/resend-verification` | Renvoie l'email de confirmation |
 | POST | `/api/join` | Demande d'adhésion |
 | GET | `/api/admin/users` | Liste des utilisateurs (code admin requis) |
 | POST | `/api/admin/validate` | Valider/rejeter une adhésion (code admin requis) |

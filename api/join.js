@@ -18,6 +18,12 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'Vous devez être connecté pour rejoindre la communauté.' });
     }
 
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: 'Veuillez confirmer votre adresse e-mail avant de rejoindre la communauté. Vérifiez votre boîte de réception (et vos spams).'
+      });
+    }
+
     const body = await getBody(req);
 
     user.membershipRequested = true;

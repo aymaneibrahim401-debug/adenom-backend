@@ -613,6 +613,13 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <p id="profileMenuText">Votre demande d'adhésion est en cours de validation par l'administrateur.</p>
         </div>
       </div>
+      <div class="profile-menu-status" id="emailVerifyBanner" style="display:none; background:#fff7e6;">
+        <span class="profile-menu-icon">✉️</span>
+        <div>
+          <strong>Email non confirmé</strong>
+          <p>Cliquez sur le lien envoyé par email pour confirmer votre adresse. <a href="#" onclick="return resendVerificationEmail(event)" id="resendVerifyLink">Renvoyer l'email</a></p>
+        </div>
+      </div>
       <div class="profile-menu-nav">
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
         <a href="#apropos" onclick="closeProfileMenu()">ℹ️ À propos</a>
@@ -1319,10 +1326,9 @@ function updateAccountUI(){
       if(dot) dot.style.background = '#0070ba';
     }
 
-    // Rappel discret si l'email n'a pas encore été confirmé
-    if(currentUser.emailVerified === false && textEl){
-      textEl.textContent += ' · Pensez à confirmer votre adresse e-mail (lien envoyé par email).';
-    }
+    // Encart séparé : email non confirmé
+    const emailBanner = document.getElementById('emailVerifyBanner');
+    if(emailBanner) emailBanner.style.display = (currentUser.emailVerified === false) ? '' : 'none';
   } else {
     if(btnLogin) btnLogin.style.display = '';
     if(btnSignup) btnSignup.style.display = '';
@@ -1346,6 +1352,22 @@ async function logoutProfile(){
   currentUser = null;
   closeProfileMenu();
   updateAccountUI();
+}
+
+async function resendVerificationEmail(e){
+  e.preventDefault();
+  const link = document.getElementById('resendVerifyLink');
+  const original = link.textContent;
+  link.textContent = 'Envoi...';
+  try{
+    await apiRequest('/api/resend-verification', { method:'POST' });
+    link.textContent = 'Email envoyé !';
+    setTimeout(() => { link.textContent = original; }, 4000);
+  }catch(err){
+    link.textContent = "Erreur, réessayez";
+    setTimeout(() => { link.textContent = original; }, 4000);
+  }
+  return false;
 }
 
 // Ferme le menu de profil si on clique ailleurs
