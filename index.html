@@ -1079,10 +1079,11 @@ async function handleAuthSubmit(e, type){
     const password = document.getElementById('loginPassword').value;
     setSubmitLoading('loginSubmitBtn', true, 'Se connecter');
     try{
-      const { user } = await apiRequest('/api/login', { method:'POST', body:{ email, password } });
+      const data = await apiRequest('/api/login', { method:'POST', body:{ email, password } });
+      const user = data && data.user ? data.user : null;
       currentUser = user;
       document.getElementById('authSuccessTitle').textContent = 'Connexion réussie !';
-      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} !`;
+      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user ? user.firstName : ''} !`;
       authFlow = null;
       switchAuthPanel('success');
       setTimeout(closeAuthModal, 1600);
@@ -1178,8 +1179,8 @@ async function handleAuthSubmit(e, type){
 
     setSubmitLoading('joinSubmitBtn', true, 'Envoyer ma demande');
     try{
-      const { user } = await apiRequest('/api/join', { method:'POST', body:{ message } });
-      currentUser = user;
+      const data = await apiRequest('/api/join', { method:'POST', body:{ message } });
+      currentUser = data && data.user ? data.user : currentUser;
 
       document.getElementById('authSuccessTitle').textContent = 'Demande envoyée !';
       document.getElementById('authSuccessText').textContent = 'Merci pour votre intérêt, nous reviendrons vers vous très bientôt.';
@@ -1393,8 +1394,8 @@ document.addEventListener('click', (e) => {
 // Récupère la session courante au chargement de la page
 (async function initAccountState(){
   try{
-    const { user } = await apiRequest('/api/me');
-    currentUser = user;
+    const data = await apiRequest('/api/me');
+    currentUser = data && data.user ? data.user : null;
   }catch(e){
     currentUser = null;
   }
