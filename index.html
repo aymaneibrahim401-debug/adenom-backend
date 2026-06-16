@@ -994,7 +994,7 @@ function openAuthModal(type){
       switchAuthPanel('join');
     } else {
       authFlow = 'join';
-      switchAuthPanel('choice');
+      switchAuthPanel('signup');
     }
   } else {
     authFlow = null;
@@ -1048,7 +1048,7 @@ function updateAuthTexts(){
     if(joinBadge) joinBadge.style.display = '';
     if(signupTitle) signupTitle.textContent = 'Créez votre compte';
     if(signupSubtitle) signupSubtitle.textContent = 'Avant de rejoindre la communauté, créez votre compte ADENOM.';
-    if(signupSwitch) signupSwitch.style.display = 'none';
+    if(signupSwitch) signupSwitch.style.display = '';
   } else {
     if(signupBadge) signupBadge.style.display = 'none';
     if(joinBadge) joinBadge.style.display = 'none';
