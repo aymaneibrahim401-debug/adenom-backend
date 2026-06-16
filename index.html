@@ -805,10 +805,12 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <div class="auth-field">
             <label>Prénom</label>
             <input type="text" id="signupFirstName" required placeholder="Prénom">
+            <span class="auth-hint">⚠️ Doit être strictement conforme à votre CIN.</span>
           </div>
           <div class="auth-field">
             <label>Nom</label>
             <input type="text" id="signupLastName" required placeholder="Nom">
+            <span class="auth-hint">⚠️ Doit être strictement conforme à votre CIN.</span>
           </div>
         </div>
         <div class="auth-field">
@@ -874,6 +876,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <p class="auth-legal">
           En cliquant sur Inscription, vous acceptez nos Conditions générales et notre Politique de confidentialité.
         </p>
+        <p class="auth-hint" style="text-align:center;margin-bottom:8px;">⚠️ Tous les champs sont obligatoires.</p>
         <button type="submit" class="auth-submit" id="signupSubmitBtn">Inscription</button>
       </form>
       <p class="auth-switch" id="authSignupSwitch">Déjà inscrit ? <a onclick="goToPanel('login')">Se connecter</a></p>
@@ -888,6 +891,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <div class="auth-field">
           <label>Numéro CIN</label>
           <input type="text" id="joinCIN" required inputmode="numeric" maxlength="14" pattern="\d{14}" placeholder="14 chiffres">
+          <span class="auth-hint">⚠️ Un seul compte par numéro de CIN.</span>
           <span class="auth-error" id="joinCINError" style="display:none;">Le numéro CIN doit contenir exactement 14 chiffres.</span>
         </div>
         <div class="auth-field">
@@ -907,14 +911,16 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <input type="text" id="joinPromotion" required inputmode="numeric" placeholder="Ex : 2026">
         </div>
         <div class="auth-field">
-          <label>Poste</label>
+          <label>Porte</label>
           <input type="text" id="joinRole" required placeholder="Ex : Membre, Responsable...">
+          <span class="auth-hint">⚠️ Si vous ne résidez plus dans le campus, ajoutez <strong>(ancien)</strong> après votre porte.</span>
         </div>
         <div class="auth-field">
           <label>Numéro joignable</label>
           <input type="tel" id="joinPhone" required placeholder="03X XX XXX XX">
         </div>
         <span class="auth-error auth-error-global" id="joinGlobalError" style="display:none;"></span>
+        <p class="auth-hint" style="text-align:center;margin-bottom:8px;">⚠️ Tous les champs sont obligatoires.</p>
         <button type="submit" class="auth-submit" id="joinSubmitBtn">Envoyer ma demande</button>
       </form>
     </div>
