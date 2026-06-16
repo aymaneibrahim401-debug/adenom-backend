@@ -950,6 +950,8 @@ document.getElementById('heroBg').style.backgroundImage = "url('" + _heroBgData 
 
 /* MODALES Connexion / Inscription / Rejoindre */
 let authFlow = null; // 'join' = l'utilisateur veut rejoindre la communauté (passe d'abord par la création de compte)
+let waitingEmailVerification = false;
+let emailVerifPollingInterval = null;
 
 function setSuccessIcon(type){
   const el = document.getElementById('authSuccessIcon');
@@ -991,6 +993,7 @@ function openAuthModal(type){
   document.body.style.overflow = 'hidden';
 }
 function closeAuthModal(){
+  if(waitingEmailVerification) return; // bloquer fermeture pendant vérification email
   document.getElementById('authOverlay').classList.remove('show');
   document.body.style.overflow = '';
   authFlow = null;
@@ -1177,7 +1180,29 @@ async function handleAuthSubmit(e, type){
       document.getElementById('authSuccessTitle').textContent = '📧 Vérifiez votre email !';
       document.getElementById('authSuccessText').textContent = `Un lien de confirmation a été envoyé à ${email}. Cliquez dessus pour activer votre compte. Pensez à vérifier vos spams.`;
       switchAuthPanel('success');
-      // Pas de closeAuthModal automatique : l'utilisateur doit lire le message
+      // Bloquer la fermeture du modal jusqu'à vérification
+      waitingEmailVerification = true;
+      // Polling : vérifier toutes les 3s si l'email est confirmé
+      if(emailVerifPollingInterval) clearInterval(emailVerifPollingInterval);
+      emailVerifPollingInterval = setInterval(async () => {
+        try {
+          const me = await apiRequest('/api/me');
+          if(me && me.emailVerified !== false){
+            clearInterval(emailVerifPollingInterval);
+            emailVerifPollingInterval = null;
+            waitingEmailVerification = false;
+            currentUser = me;
+            updateAccountUI();
+            document.getElementById('authSuccessTitle').textContent = '✅ Email confirmé !';
+            document.getElementById('authSuccessText').textContent = 'Votre compte est activé. Bienvenue !';
+            setTimeout(() => {
+              document.getElementById('authOverlay').classList.remove('show');
+              document.body.style.overflow = '';
+              authFlow = null;
+            }, 2000);
+          }
+        } catch(e) {}
+      }, 3000);
     }catch(err){
       showFieldError('signupGlobalError', err.message);
     }finally{
@@ -1365,6 +1390,9 @@ async function logoutProfile(){
   currentUser = null;
   closeProfileMenu();
   updateAccountUI();
+  // Vider les champs de connexion
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
 }
 
 async function resendVerificationEmail(e){
