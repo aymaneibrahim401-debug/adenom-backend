@@ -759,6 +759,16 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
   <div class="auth-modal">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
 
+    <!-- CHOIX : Connexion ou Ouvrir un compte -->
+    <div id="authChoice" class="auth-panel" style="display:none;">
+      <div class="auth-title">Rejoindre la communauté</div>
+      <p class="auth-subtitle">Vous avez déjà un compte ou vous souhaitez en créer un ?</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:24px;">
+        <button class="auth-submit" onclick="goToPanel('login')" style="background:#0070ba;">Se connecter</button>
+        <button class="auth-submit" onclick="goChoiceSignup()" style="background:#003087;">Ouvrir un compte</button>
+      </div>
+    </div>
+
     <!-- CONNEXION -->
     <div id="authLogin" class="auth-panel">
       <div class="auth-title">Connexion</div>
@@ -984,7 +994,7 @@ function openAuthModal(type){
       switchAuthPanel('join');
     } else {
       authFlow = 'join';
-      switchAuthPanel('signup');
+      switchAuthPanel('choice');
     }
   } else {
     authFlow = null;
@@ -1001,12 +1011,16 @@ function closeAuthModal(){
 function closeAuthOnOverlay(e){
   if(e.target.id === 'authOverlay') closeAuthModal();
 }
+function goChoiceSignup(){
+  authFlow = 'join';
+  switchAuthPanel('signup');
+}
 function goToPanel(type){
   authFlow = null;
   switchAuthPanel(type);
 }
 function switchAuthPanel(type){
-  const ids = {login:'authLogin', signup:'authSignup', join:'authJoin', forgot:'authForgot', success:'authSuccess'};
+  const ids = {login:'authLogin', signup:'authSignup', join:'authJoin', forgot:'authForgot', success:'authSuccess', choice:'authChoice'};
   Object.keys(ids).forEach(key => {
     const el = document.getElementById(ids[key]);
     if(el) el.style.display = (key === type) ? '' : 'none';
