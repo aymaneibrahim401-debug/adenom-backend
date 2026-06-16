@@ -28,26 +28,6 @@ html{scroll-behavior:smooth;}
   --menu-border:#eeeeee;
 }
 
-body.dark-mode{
-  --bg-page:#070f1c;
-  --bg-header:#0f2034;
-  --bg-section-light:#0f2034;
-  --bg-section-alt:#0a1628;
-  --bg-card:#15273f;
-  --text-title:#6fb3ff;
-  --text-secondary:#b8c6d9;
-  --text-secondary2:#b8c6d9;
-  --border-color:#1f3a57;
-  --menu-bg:#0f2034;
-  --menu-text:#e8eef5;
-  --menu-border:#1f3a57;
-}
-
-body,header,.side-menu,.anniversary-section,.gallery-section,.services,.card,
-.region-page,.section-title,.anniv-title,.anniv-subtitle,.card h3,.card p,
-.region-page-body p,.side-menu a{
-  transition:background-color 0.3s ease,color 0.3s ease,border-color 0.3s ease;
-}
 
 body{
   background:var(--bg-page);
@@ -173,9 +153,6 @@ header.hide-on-scroll{
   text-decoration:none;color:var(--menu-text);font-weight:bold;
   font-size:13px;padding:8px 0;border-bottom:1px solid var(--menu-border);
 }
-.profile-menu-nav .menu-toggle-row{
-  border-bottom:none;font-size:13px;padding:8px 0;
-}
 
 /* SIDE MENU */
 .side-menu{
@@ -185,28 +162,6 @@ header.hide-on-scroll{
 }
 .side-menu.open{right:0;}
 .side-menu a{text-decoration:none;color:var(--menu-text);font-weight:bold;padding:8px 0;border-bottom:1px solid var(--menu-border);}
-
-/* DARK MODE TOGGLE (dans le menu) */
-.menu-toggle-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:8px 0;border-bottom:1px solid var(--menu-border);
-  color:var(--menu-text);font-weight:bold;
-}
-.switch{
-  position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;
-}
-.switch input{opacity:0;width:0;height:0;}
-.switch-slider{
-  position:absolute;cursor:pointer;inset:0;
-  background-color:#ccc;border-radius:24px;transition:0.3s;
-}
-.switch-slider::before{
-  content:"";position:absolute;height:18px;width:18px;
-  left:3px;bottom:3px;background-color:white;border-radius:50%;
-  transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.3);
-}
-.switch input:checked + .switch-slider{background-color:#0070ba;}
-.switch input:checked + .switch-slider::before{transform:translateX(20px);}
 
 .overlay{
   position:fixed;top:0;left:0;width:100%;height:100vh;
@@ -667,13 +622,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
         <a href="#apropos" onclick="closeProfileMenu()">ℹ️ À propos</a>
         <a href="#contact" onclick="closeProfileMenu()">📞 Contact</a>
-        <div class="menu-toggle-row">
-          <span>🌙 Mode sombre</span>
-          <label class="switch">
-            <input type="checkbox" id="darkModeToggleProfile" onchange="toggleDarkMode(this)">
-            <span class="switch-slider"></span>
-          </label>
-        </div>
       </div>
       <button class="profile-menu-logout" onclick="logoutProfile()">Se déconnecter</button>
     </div>
@@ -685,13 +633,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
   <a href="#hero" onclick="closeMenu()">🏠 Accueil</a>
   <a href="#apropos" onclick="closeMenu()">ℹ️ À propos</a>
   <a href="#contact" onclick="closeMenu()">📞 Contact</a>
-  <div class="menu-toggle-row">
-    <span>🌙 Mode sombre</span>
-    <label class="switch">
-      <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)">
-      <span class="switch-slider"></span>
-    </label>
-  </div>
 </div>
 <div id="overlay" class="overlay" onclick="closeMenu()"></div>
 
@@ -1330,31 +1271,6 @@ document.querySelectorAll('.auth-password-wrap input').forEach(input => {
     if(err) err.style.display = 'none';
   });
 });
-
-/* MODE SOMBRE */
-function toggleDarkMode(sourceEl){
-  const enabled = sourceEl.checked;
-  document.body.classList.toggle('dark-mode', enabled);
-  try{ localStorage.setItem('adenom-dark-mode', enabled ? '1' : '0'); }catch(e){}
-  // Synchronise l'autre toggle (side-menu ou profile-menu)
-  ['darkModeToggle','darkModeToggleProfile'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el && el !== sourceEl) el.checked = enabled;
-  });
-}
-
-// Applique la préférence sauvegardée au chargement
-(function initDarkMode(){
-  let saved = null;
-  try{ saved = localStorage.getItem('adenom-dark-mode'); }catch(e){}
-  if(saved === '1'){
-    document.body.classList.add('dark-mode');
-    ['darkModeToggle','darkModeToggleProfile'].forEach(id => {
-      const toggle = document.getElementById(id);
-      if(toggle) toggle.checked = true;
-    });
-  }
-})();
 
 /* MENU */
 function openMenu(){
