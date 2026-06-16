@@ -84,10 +84,25 @@ header.hide-on-scroll{
 .btn-signup:active{transform:scale(0.95);}
 
 /* BANDEAU LOGO MEMBRE (remplace Connexion / Ouvrir un compte) */
+/* ANIMATIONS HEADER */
+@keyframes slideFromLeft {
+  from { opacity:0; transform:translateX(-60px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes slideFromRight {
+  from { opacity:0; transform:translateX(60px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+
 .member-banner{
   height:38px;width:100%;max-width:none;object-fit:contain;
   flex:1;
   mix-blend-mode: multiply;
+  animation: slideFromLeft 0.7s cubic-bezier(0.25,0.46,0.45,0.94) both;
+}
+
+.profile-bubble-wrap{
+  animation: slideFromRight 0.7s cubic-bezier(0.25,0.46,0.45,0.94) both;
 }
 
 .hamburger{
