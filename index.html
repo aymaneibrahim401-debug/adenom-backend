@@ -1754,11 +1754,24 @@ function adminLogout(){
   document.getElementById('adminDashboard').style.display = 'none';
 }
 
+// Stocker temporairement les données CIN pour la lightbox
+const _cinStore = {};
+
 async function loadAdminUsers(){
   try{
     const res = await fetch(API_BASE + '/api/admin/users', { headers:{'x-admin-code': adminCode} });
     const data = await res.json();
     const users = data.users || [];
+
+    // Stocker les données CIN dans _cinStore
+    users.forEach(u => {
+      try{
+        const d = JSON.parse(u.membershipMessage || '{}');
+        if(d.cinRecto || d.cinVerso){
+          _cinStore[u.id] = { recto: d.cinRecto || null, verso: d.cinVerso || null };
+        }
+      }catch(e){}
+    });
 
     const pending = users.filter(u => u.accountStatus === 'pending');
     const members = users.filter(u => u.accountStatus === 'member');
@@ -1779,10 +1792,11 @@ function adminCard(u){
     u.accountStatus === 'member' ? '<span class="admin-user-status status-member">Membre</span>' :
     '<span class="admin-user-status status-active">Actif</span>';
 
-  const cinImgs = (details.cinRecto || details.cinVerso) ? `
+  const hasCIN = _cinStore[u.id] && (_cinStore[u.id].recto || _cinStore[u.id].verso);
+  const cinImgs = hasCIN ? `
     <div class="admin-cin-imgs">
-      ${details.cinRecto ? `<img src="${details.cinRecto}" onclick="openCIN('${u.id}','recto')" title="CIN Recto">` : ''}
-      ${details.cinVerso ? `<img src="${details.cinVerso}" onclick="openCIN('${u.id}','verso')" title="CIN Verso">` : ''}
+      ${_cinStore[u.id].recto ? `<img src="${_cinStore[u.id].recto}" onclick="openCINFromStore('${u.id}','recto')" title="CIN Recto">` : ''}
+      ${_cinStore[u.id].verso ? `<img src="${_cinStore[u.id].verso}" onclick="openCINFromStore('${u.id}','verso')" title="CIN Verso">` : ''}
     </div>` : '';
 
   const actions = u.accountStatus === 'pending' ? `
@@ -1806,17 +1820,10 @@ function adminCard(u){
   </div>`;
 }
 
-// Stocker temporairement les données CIN pour la lightbox
-const _cinStore = {};
-async function openCIN(userId, side){
-  // Re-fetch pour avoir les données fraîches
-  const res = await fetch(API_BASE + '/api/admin/users', { headers:{'x-admin-code': adminCode} });
-  const data = await res.json();
-  const user = (data.users||[]).find(u => u.id === userId);
-  if(!user) return;
-  let details = {};
-  try{ details = JSON.parse(user.membershipMessage || '{}'); }catch(e){}
-  const src = side === 'recto' ? details.cinRecto : details.cinVerso;
+function openCINFromStore(userId, side){
+  const store = _cinStore[userId];
+  if(!store) return;
+  const src = side === 'recto' ? store.recto : store.verso;
   if(!src) return;
   document.getElementById('cinLightboxImg').src = src;
   document.getElementById('cinLightbox').classList.add('show');
