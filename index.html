@@ -511,6 +511,11 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 .auth-success .auth-success-icon{font-size:46px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;}
 .auth-success h3{color:var(--text-title);font-size:18px;margin-bottom:8px;}
 .auth-success p{color:var(--text-secondary2);font-size:13px;line-height:1.6;}
+.auth-success.animate-in{animation:success-reveal 0.35s cubic-bezier(0.175,0.885,0.32,1.275) forwards;}
+@keyframes success-reveal{
+  from{opacity:0;transform:scale(0.82);}
+  to{opacity:1;transform:scale(1);}
+}
 
 /* Spinner animé (demande en attente) */
 .auth-icon-spinner{
@@ -1041,6 +1046,15 @@ function switchAuthPanel(type){
     const el = document.getElementById(ids[key]);
     if(el) el.style.display = (key === type) ? '' : 'none';
   });
+  // Animation zoom depuis l'intérieur sur le panneau succès
+  if(type === 'success'){
+    const el = document.getElementById('authSuccess');
+    if(el){
+      el.classList.remove('animate-in');
+      void el.offsetWidth; // force reflow pour relancer l'animation
+      el.classList.add('animate-in');
+    }
+  }
   updateAuthTexts();
 }
 function updateAuthTexts(){
