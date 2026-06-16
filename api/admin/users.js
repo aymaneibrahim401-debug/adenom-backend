@@ -4,6 +4,13 @@
 const db = require('../../lib/db');
 const { handlePreflight, checkAdminCode, sanitizeUser } = require('../../lib/http');
 
+// Version admin : inclut les photos CIN (contrairement à sanitizeUser)
+function adminUser(user) {
+  if (!user) return null;
+  const { passwordHash, ...safe } = user;
+  return safe;
+}
+
 module.exports = async (req, res) => {
   if (handlePreflight(req, res)) return;
   if (req.method !== 'GET') {
@@ -18,7 +25,7 @@ module.exports = async (req, res) => {
     }
 
     const users = await db.getAllUsers();
-    return res.status(200).json({ users: users.map(sanitizeUser) });
+    return res.status(200).json({ users: users.map(adminUser) });
   } catch (err) {
     console.error('Erreur /api/admin/users:', err);
     return res.status(500).json({ error: 'Erreur interne du serveur.' });

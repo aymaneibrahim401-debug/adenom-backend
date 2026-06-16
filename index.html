@@ -597,7 +597,8 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 .auth-password-wrap input.error,
 .auth-field input.error{border-color:#e0334d;}
 
-/* REDUCED MOTION */
+/* ========== UPLOAD PHOTO CIN ========== */
+.cin-upload-group{display:flex;gap:10px;}\n.cin-upload-group .auth-field{flex:1;margin-bottom:14px;}\n\n.cin-upload-zone{\n  position:relative;\n  border:2px dashed var(--border-color);\n  border-radius:10px;\n  background:var(--bg-section-alt);\n  overflow:hidden;\n  cursor:pointer;\n  transition:border-color 0.2s, background 0.2s;\n  aspect-ratio:3/2;\n  display:flex;align-items:center;justify-content:center;\n}\n.cin-upload-zone:hover{border-color:#0070ba;background:rgba(0,112,186,0.04);}\n.cin-upload-zone.has-file{border-color:#0070ba;border-style:solid;}\n.cin-upload-zone input[type=file]{\n  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;\n}\n.cin-upload-placeholder{\n  display:flex;flex-direction:column;align-items:center;gap:5px;\n  pointer-events:none;padding:8px;\n}\n.cin-upload-placeholder .cin-icon{font-size:22px;}\n.cin-upload-placeholder span{\n  font-size:11px;color:var(--text-secondary2);text-align:center;font-weight:600;\n  line-height:1.3;\n}\n.cin-upload-placeholder .cin-hint{\n  font-size:10px;color:#aaa;font-weight:400;\n}\n.cin-preview{\n  width:100%;height:100%;object-fit:cover;\n  display:none;\n  border-radius:8px;\n}\n.cin-upload-zone.has-file .cin-preview{display:block;}\n.cin-upload-zone.has-file .cin-upload-placeholder{display:none;}\n\n.cin-upload-zone.error-border{border-color:#e0334d!important;}\n\n/* REDUCED MOTION */
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;}
 }
@@ -919,6 +920,40 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <label>Numéro joignable</label>
           <input type="tel" id="joinPhone" required placeholder="03X XX XXX XX">
         </div>
+        <!-- PHOTOS CIN -->
+        <div class="auth-field" style="margin-bottom:6px;">
+          <label>Photos de votre CIN <span style="color:#e0334d;">*</span></label>
+          <span class="auth-hint" style="margin-bottom:8px;display:block;">⚠️ Les deux faces sont obligatoires. JPG/PNG, max 5 Mo chacune.</span>
+          <div class="cin-upload-group">
+            <div class="auth-field" style="margin-bottom:0;">
+              <label style="font-size:11px;color:var(--text-secondary2);">Recto (face avant)</label>
+              <div class="cin-upload-zone" id="cinRectoZone">
+                <input type="file" id="joinCINRecto" accept="image/jpeg,image/png,image/webp" onchange="handleCINPhoto(this,'cinRectoZone','cinRectoPreview','cinRectoError')">
+                <div class="cin-upload-placeholder">
+                  <span class="cin-icon">🪪</span>
+                  <span>Appuyez pour<br>ajouter une photo</span>
+                  <span class="cin-hint">Recto</span>
+                </div>
+                <img class="cin-preview" id="cinRectoPreview" alt="CIN recto">
+              </div>
+              <span class="auth-error" id="cinRectoError" style="display:none;">Photo recto requise.</span>
+            </div>
+            <div class="auth-field" style="margin-bottom:0;">
+              <label style="font-size:11px;color:var(--text-secondary2);">Verso (face arrière)</label>
+              <div class="cin-upload-zone" id="cinVersoZone">
+                <input type="file" id="joinCINVerso" accept="image/jpeg,image/png,image/webp" onchange="handleCINPhoto(this,'cinVersoZone','cinVersoPreview','cinVersoError')">
+                <div class="cin-upload-placeholder">
+                  <span class="cin-icon">🪪</span>
+                  <span>Appuyez pour<br>ajouter une photo</span>
+                  <span class="cin-hint">Verso</span>
+                </div>
+                <img class="cin-preview" id="cinVersoPreview" alt="CIN verso">
+              </div>
+              <span class="auth-error" id="cinVersoError" style="display:none;">Photo verso requise.</span>
+            </div>
+          </div>
+        </div>
+
         <span class="auth-error auth-error-global" id="joinGlobalError" style="display:none;"></span>
         <p class="auth-hint" style="text-align:center;margin-bottom:8px;">⚠️ Tous les champs sont obligatoires.</p>
         <button type="submit" class="auth-submit" id="joinSubmitBtn">Envoyer ma demande</button>
@@ -1233,6 +1268,46 @@ async function handleAuthSubmit(e, type){
     return false;
   }
 
+/* ========== UPLOAD PHOTO CIN ========== */
+const cinPhotoData = { recto: null, verso: null };
+
+function handleCINPhoto(input, zoneId, previewId, errorId){
+  const file = input.files[0];
+  const zone = document.getElementById(zoneId);
+  const preview = document.getElementById(previewId);
+  const error = document.getElementById(errorId);
+
+  // Reset erreur
+  if(error) error.style.display = 'none';
+  zone.classList.remove('error-border');
+
+  if(!file) {
+    zone.classList.remove('has-file');
+    preview.src = '';
+    if(zoneId === 'cinRectoZone') cinPhotoData.recto = null;
+    else cinPhotoData.verso = null;
+    return;
+  }
+
+  // Vérif taille (5 Mo)
+  if(file.size > 5 * 1024 * 1024){
+    zone.classList.remove('has-file');
+    if(error){ error.textContent = 'Fichier trop volumineux (max 5 Mo).'; error.style.display = 'block'; }
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result; // "data:image/jpeg;base64,..."
+    preview.src = base64;
+    zone.classList.add('has-file');
+    if(zoneId === 'cinRectoZone') cinPhotoData.recto = base64;
+    else cinPhotoData.verso = base64;
+  };
+  reader.readAsDataURL(file);
+}
+
   // ---------- REJOINDRE LA COMMUNAUTE ----------
   if(type === 'join'){
     hideFieldError('joinGlobalError');
@@ -1259,11 +1334,26 @@ async function handleAuthSubmit(e, type){
       role: document.getElementById('joinRole').value.trim(),
       phone: document.getElementById('joinPhone').value.trim()
     };
+
+    // Validation photos CIN
+    let photoError = false;
+    if(!cinPhotoData.recto){
+      document.getElementById('cinRectoError').style.display = 'block';
+      document.getElementById('cinRectoZone').classList.add('error-border');
+      photoError = true;
+    }
+    if(!cinPhotoData.verso){
+      document.getElementById('cinVersoError').style.display = 'block';
+      document.getElementById('cinVersoZone').classList.add('error-border');
+      photoError = true;
+    }
+    if(photoError) return false;
+
     const message = JSON.stringify(details);
 
     setSubmitLoading('joinSubmitBtn', true, 'Envoyer ma demande');
     try{
-      const data = await apiRequest('/api/join', { method:'POST', body:{ message } });
+      const data = await apiRequest('/api/join', { method:'POST', body:{ message, cinPhotoRecto: cinPhotoData.recto, cinPhotoVerso: cinPhotoData.verso } });
       currentUser = data && data.user ? data.user : currentUser;
 
       setSuccessIcon('check');
@@ -1412,6 +1502,21 @@ async function logoutProfile(){
   currentUser = null;
   closeProfileMenu();
   updateAccountUI();
+  // Réinitialiser les photos CIN
+  cinPhotoData.recto = null;
+  cinPhotoData.verso = null;
+  ['cinRectoZone','cinVersoZone'].forEach(id => {
+    const z = document.getElementById(id);
+    if(z) z.classList.remove('has-file','error-border');
+  });
+  ['cinRectoPreview','cinVersoPreview'].forEach(id => {
+    const p = document.getElementById(id);
+    if(p) p.src = '';
+  });
+  ['joinCINRecto','joinCINVerso'].forEach(id => {
+    const i = document.getElementById(id);
+    if(i) i.value = '';
+  });
   // Vider les champs de connexion
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
