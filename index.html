@@ -597,8 +597,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 .auth-password-wrap input.error,
 .auth-field input.error{border-color:#e0334d;}
 
-/* ========== UPLOAD PHOTO CIN ========== */
-.cin-upload-group{display:flex;gap:10px;}\n.cin-upload-group .auth-field{flex:1;margin-bottom:14px;}\n\n.cin-upload-zone{\n  position:relative;\n  border:2px dashed var(--border-color);\n  border-radius:10px;\n  background:var(--bg-section-alt);\n  overflow:hidden;\n  cursor:pointer;\n  transition:border-color 0.2s, background 0.2s;\n  aspect-ratio:3/2;\n  display:flex;align-items:center;justify-content:center;\n}\n.cin-upload-zone:hover{border-color:#0070ba;background:rgba(0,112,186,0.04);}\n.cin-upload-zone.has-file{border-color:#0070ba;border-style:solid;}\n.cin-upload-zone input[type=file]{\n  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;\n}\n.cin-upload-placeholder{\n  display:flex;flex-direction:column;align-items:center;gap:5px;\n  pointer-events:none;padding:8px;\n}\n.cin-upload-placeholder .cin-icon{font-size:22px;}\n.cin-upload-placeholder span{\n  font-size:11px;color:var(--text-secondary2);text-align:center;font-weight:600;\n  line-height:1.3;\n}\n.cin-upload-placeholder .cin-hint{\n  font-size:10px;color:#aaa;font-weight:400;\n}\n.cin-preview{\n  width:100%;height:100%;object-fit:cover;\n  display:none;\n  border-radius:8px;\n}\n.cin-upload-zone.has-file .cin-preview{display:block;}\n.cin-upload-zone.has-file .cin-upload-placeholder{display:none;}\n\n.cin-upload-zone.error-border{border-color:#e0334d!important;}\n\n/* REDUCED MOTION */
+/* REDUCED MOTION */
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;}
 }
@@ -920,40 +919,16 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <label>Numéro joignable</label>
           <input type="tel" id="joinPhone" required placeholder="03X XX XXX XX">
         </div>
-        <!-- PHOTOS CIN -->
-        <div class="auth-field" style="margin-bottom:6px;">
-          <label>Photos de votre CIN <span style="color:#e0334d;">*</span></label>
-          <span class="auth-hint" style="margin-bottom:8px;display:block;">⚠️ Les deux faces sont obligatoires. JPG/PNG, max 5 Mo chacune.</span>
-          <div class="cin-upload-group">
-            <div class="auth-field" style="margin-bottom:0;">
-              <label style="font-size:11px;color:var(--text-secondary2);">Recto (face avant)</label>
-              <div class="cin-upload-zone" id="cinRectoZone">
-                <input type="file" id="joinCINRecto" accept="image/jpeg,image/png,image/webp" onchange="handleCINPhoto(this,'cinRectoZone','cinRectoPreview','cinRectoError')">
-                <div class="cin-upload-placeholder">
-                  <span class="cin-icon">🪪</span>
-                  <span>Appuyez pour<br>ajouter une photo</span>
-                  <span class="cin-hint">Recto</span>
-                </div>
-                <img class="cin-preview" id="cinRectoPreview" alt="CIN recto">
-              </div>
-              <span class="auth-error" id="cinRectoError" style="display:none;">Photo recto requise.</span>
-            </div>
-            <div class="auth-field" style="margin-bottom:0;">
-              <label style="font-size:11px;color:var(--text-secondary2);">Verso (face arrière)</label>
-              <div class="cin-upload-zone" id="cinVersoZone">
-                <input type="file" id="joinCINVerso" accept="image/jpeg,image/png,image/webp" onchange="handleCINPhoto(this,'cinVersoZone','cinVersoPreview','cinVersoError')">
-                <div class="cin-upload-placeholder">
-                  <span class="cin-icon">🪪</span>
-                  <span>Appuyez pour<br>ajouter une photo</span>
-                  <span class="cin-hint">Verso</span>
-                </div>
-                <img class="cin-preview" id="cinVersoPreview" alt="CIN verso">
-              </div>
-              <span class="auth-error" id="cinVersoError" style="display:none;">Photo verso requise.</span>
-            </div>
-          </div>
+        <div class="auth-field">
+          <label>Photo CIN Recto</label>
+          <input type="file" id="joinCINRecto" required accept="image/*" style="padding:6px;">
+          <span class="auth-hint">⚠️ Photo claire et lisible de votre CIN (face avant).</span>
         </div>
-
+        <div class="auth-field">
+          <label>Photo CIN Verso</label>
+          <input type="file" id="joinCINVerso" required accept="image/*" style="padding:6px;">
+          <span class="auth-hint">⚠️ Photo claire et lisible de votre CIN (face arrière).</span>
+        </div>
         <span class="auth-error auth-error-global" id="joinGlobalError" style="display:none;"></span>
         <p class="auth-hint" style="text-align:center;margin-bottom:8px;">⚠️ Tous les champs sont obligatoires.</p>
         <button type="submit" class="auth-submit" id="joinSubmitBtn">Envoyer ma demande</button>
@@ -1268,46 +1243,6 @@ async function handleAuthSubmit(e, type){
     return false;
   }
 
-/* ========== UPLOAD PHOTO CIN ========== */
-const cinPhotoData = { recto: null, verso: null };
-
-function handleCINPhoto(input, zoneId, previewId, errorId){
-  const file = input.files[0];
-  const zone = document.getElementById(zoneId);
-  const preview = document.getElementById(previewId);
-  const error = document.getElementById(errorId);
-
-  // Reset erreur
-  if(error) error.style.display = 'none';
-  zone.classList.remove('error-border');
-
-  if(!file) {
-    zone.classList.remove('has-file');
-    preview.src = '';
-    if(zoneId === 'cinRectoZone') cinPhotoData.recto = null;
-    else cinPhotoData.verso = null;
-    return;
-  }
-
-  // Vérif taille (5 Mo)
-  if(file.size > 5 * 1024 * 1024){
-    zone.classList.remove('has-file');
-    if(error){ error.textContent = 'Fichier trop volumineux (max 5 Mo).'; error.style.display = 'block'; }
-    input.value = '';
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const base64 = e.target.result; // "data:image/jpeg;base64,..."
-    preview.src = base64;
-    zone.classList.add('has-file');
-    if(zoneId === 'cinRectoZone') cinPhotoData.recto = base64;
-    else cinPhotoData.verso = base64;
-  };
-  reader.readAsDataURL(file);
-}
-
   // ---------- REJOINDRE LA COMMUNAUTE ----------
   if(type === 'join'){
     hideFieldError('joinGlobalError');
@@ -1325,35 +1260,39 @@ function handleCINPhoto(input, zoneId, previewId, errorId){
       cinError.style.display = 'none';
     }
 
-    const details = {
-      cin: cin.value.trim(),
-      school: document.getElementById('joinSchool').value.trim(),
-      field: document.getElementById('joinField').value.trim(),
-      level: document.getElementById('joinLevel').value.trim(),
-      promotion: document.getElementById('joinPromotion').value.trim(),
-      role: document.getElementById('joinRole').value.trim(),
-      phone: document.getElementById('joinPhone').value.trim()
-    };
-
-    // Validation photos CIN
-    let photoError = false;
-    if(!cinPhotoData.recto){
-      document.getElementById('cinRectoError').style.display = 'block';
-      document.getElementById('cinRectoZone').classList.add('error-border');
-      photoError = true;
+    // Vérifier les photos
+    const rectoFile = document.getElementById('joinCINRecto').files[0];
+    const versoFile = document.getElementById('joinCINVerso').files[0];
+    if(!rectoFile || !versoFile){
+      showFieldError('joinGlobalError', 'Veuillez uploader les deux photos de votre CIN (recto et verso).');
+      return false;
     }
-    if(!cinPhotoData.verso){
-      document.getElementById('cinVersoError').style.display = 'block';
-      document.getElementById('cinVersoZone').classList.add('error-border');
-      photoError = true;
-    }
-    if(photoError) return false;
 
-    const message = JSON.stringify(details);
+    // Convertir en base64
+    const toBase64 = file => new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
 
     setSubmitLoading('joinSubmitBtn', true, 'Envoyer ma demande');
     try{
-      const data = await apiRequest('/api/join', { method:'POST', body:{ message, cinPhotoRecto: cinPhotoData.recto, cinPhotoVerso: cinPhotoData.verso } });
+      const [cinRectoB64, cinVersoB64] = await Promise.all([toBase64(rectoFile), toBase64(versoFile)]);
+
+      const details = {
+        cin: cin.value.trim(),
+        school: document.getElementById('joinSchool').value.trim(),
+        field: document.getElementById('joinField').value.trim(),
+        level: document.getElementById('joinLevel').value.trim(),
+        promotion: document.getElementById('joinPromotion').value.trim(),
+        role: document.getElementById('joinRole').value.trim(),
+        phone: document.getElementById('joinPhone').value.trim(),
+        cinRecto: cinRectoB64,
+        cinVerso: cinVersoB64
+      };
+      const message = JSON.stringify(details);
+      const data = await apiRequest('/api/join', { method:'POST', body:{ message } });
       currentUser = data && data.user ? data.user : currentUser;
 
       setSuccessIcon('check');
@@ -1502,21 +1441,6 @@ async function logoutProfile(){
   currentUser = null;
   closeProfileMenu();
   updateAccountUI();
-  // Réinitialiser les photos CIN
-  cinPhotoData.recto = null;
-  cinPhotoData.verso = null;
-  ['cinRectoZone','cinVersoZone'].forEach(id => {
-    const z = document.getElementById(id);
-    if(z) z.classList.remove('has-file','error-border');
-  });
-  ['cinRectoPreview','cinVersoPreview'].forEach(id => {
-    const p = document.getElementById(id);
-    if(p) p.src = '';
-  });
-  ['joinCINRecto','joinCINVerso'].forEach(id => {
-    const i = document.getElementById(id);
-    if(i) i.value = '';
-  });
   // Vider les champs de connexion
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
@@ -1700,6 +1624,215 @@ function closeRegionPage(){
   setTimeout(() => { document.body.style.overflow = ''; }, 350);
 }
 
+</script>
+
+<!-- ========== PANEL ADMIN ========== -->
+<style>
+#adminOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:3000;
+  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 0;
+}
+#adminOverlay.show{display:flex;}
+#adminPanel{
+  background:#fff;border-radius:18px;width:100%;max-width:370px;
+  margin:auto;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.25);
+}
+.admin-title{font-size:18px;font-weight:800;color:#003087;margin-bottom:4px;text-align:center;}
+.admin-subtitle{font-size:12px;color:#888;text-align:center;margin-bottom:16px;}
+.admin-login-field{margin-bottom:12px;}
+.admin-login-field input{width:100%;padding:10px 12px;border:1.5px solid #e8eef5;border-radius:10px;font-size:14px;box-sizing:border-box;}
+.admin-btn{width:100%;padding:12px;background:#003087;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.admin-btn:hover{background:#0070ba;}
+.admin-error{color:#e0334d;font-size:12px;margin-top:6px;display:none;text-align:center;}
+.admin-close-btn{background:none;border:none;font-size:20px;cursor:pointer;float:right;color:#888;}
+.admin-user-card{background:#f5f8fb;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #e8eef5;}
+.admin-user-name{font-weight:700;color:#003087;font-size:15px;margin-bottom:4px;}
+.admin-user-info{font-size:12px;color:#555;margin-bottom:2px;}
+.admin-user-status{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:8px;}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-member{background:#d4edda;color:#155724;}
+.status-active{background:#e2e8f0;color:#444;}
+.admin-actions{display:flex;gap:8px;margin-top:8px;}
+.btn-approve{flex:1;padding:8px;background:#28a745;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-reject{flex:1;padding:8px;background:#e0334d;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-approve:hover{background:#218838;}
+.btn-reject:hover{background:#c82333;}
+.admin-cin-imgs{display:flex;gap:6px;margin-top:8px;}
+.admin-cin-imgs img{width:48%;border-radius:6px;border:1px solid #ddd;cursor:pointer;}
+.admin-section-title{font-size:13px;font-weight:700;color:#003087;margin:16px 0 8px;border-bottom:1px solid #e8eef5;padding-bottom:4px;}
+.admin-logout{width:100%;padding:10px;background:#f5f8fb;color:#e0334d;border:1px solid #e0334d;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;}
+.admin-empty{text-align:center;color:#aaa;font-size:13px;padding:20px 0;}
+/* Lightbox CIN */
+#cinLightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:4000;display:none;align-items:center;justify-content:center;}
+#cinLightbox.show{display:flex;}
+#cinLightbox img{max-width:90%;max-height:90%;border-radius:10px;}
+</style>
+
+<div id="adminOverlay">
+  <div id="adminPanel">
+    <!-- LOGIN ADMIN -->
+    <div id="adminLogin">
+      <button class="admin-close-btn" onclick="closeAdmin()">✕</button>
+      <div class="admin-title">🔐 Espace Admin</div>
+      <div class="admin-subtitle">ADENOM — Accès réservé</div>
+      <div class="admin-login-field">
+        <input type="password" id="adminCodeInput" placeholder="Code administrateur" onkeydown="if(event.key==='Enter')adminLogin()">
+      </div>
+      <div class="admin-error" id="adminLoginError">Code incorrect.</div>
+      <button class="admin-btn" onclick="adminLogin()">Accéder</button>
+    </div>
+    <!-- DASHBOARD ADMIN -->
+    <div id="adminDashboard" style="display:none;">
+      <button class="admin-close-btn" onclick="closeAdmin()">✕</button>
+      <div class="admin-title">👨‍💼 Panel Admin</div>
+      <div class="admin-subtitle" id="adminStats"></div>
+      <div class="admin-section-title">⏳ Demandes en attente</div>
+      <div id="adminPending"></div>
+      <div class="admin-section-title">✅ Membres validés</div>
+      <div id="adminMembers"></div>
+      <div class="admin-section-title">👤 Comptes actifs</div>
+      <div id="adminActives"></div>
+      <button class="admin-logout" onclick="adminLogout()">Se déconnecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox CIN -->
+<div id="cinLightbox" onclick="this.classList.remove('show')">
+  <img id="cinLightboxImg" src="">
+</div>
+
+<script>
+let adminCode = null;
+
+// Ouvrir le panel admin via triple tap sur le footer logo
+(function(){
+  let taps = 0, timer;
+  const el = document.querySelector('.footer-logo');
+  if(el) el.addEventListener('click', function(e){
+    e.preventDefault();
+    taps++;
+    clearTimeout(timer);
+    timer = setTimeout(()=>{ taps=0; }, 600);
+    if(taps >= 3){ taps=0; openAdmin(); }
+  });
+})();
+
+function openAdmin(){
+  document.getElementById('adminOverlay').classList.add('show');
+  document.getElementById('adminLogin').style.display = '';
+  document.getElementById('adminDashboard').style.display = 'none';
+  document.getElementById('adminCodeInput').value = '';
+  document.getElementById('adminLoginError').style.display = 'none';
+}
+function closeAdmin(){
+  document.getElementById('adminOverlay').classList.remove('show');
+  adminCode = null;
+}
+
+async function adminLogin(){
+  const code = document.getElementById('adminCodeInput').value.trim();
+  if(!code) return;
+  try{
+    const res = await fetch(API_BASE + '/api/admin/users', {
+      headers:{ 'x-admin-code': code }
+    });
+    if(!res.ok){ document.getElementById('adminLoginError').style.display='block'; return; }
+    adminCode = code;
+    document.getElementById('adminLoginError').style.display = 'none';
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminDashboard').style.display = '';
+    await loadAdminUsers();
+  }catch(e){
+    document.getElementById('adminLoginError').style.display = 'block';
+  }
+}
+
+function adminLogout(){
+  adminCode = null;
+  document.getElementById('adminLogin').style.display = '';
+  document.getElementById('adminDashboard').style.display = 'none';
+}
+
+async function loadAdminUsers(){
+  try{
+    const res = await fetch(API_BASE + '/api/admin/users', { headers:{'x-admin-code': adminCode} });
+    const data = await res.json();
+    const users = data.users || [];
+
+    const pending = users.filter(u => u.accountStatus === 'pending');
+    const members = users.filter(u => u.accountStatus === 'member');
+    const actives = users.filter(u => u.accountStatus === 'active');
+
+    document.getElementById('adminStats').textContent = `${users.length} comptes — ${pending.length} en attente`;
+
+    document.getElementById('adminPending').innerHTML = pending.length ? pending.map(u => adminCard(u)).join('') : '<div class="admin-empty">Aucune demande en attente</div>';
+    document.getElementById('adminMembers').innerHTML = members.length ? members.map(u => adminCard(u)).join('') : '<div class="admin-empty">Aucun membre validé</div>';
+    document.getElementById('adminActives').innerHTML = actives.length ? actives.map(u => adminCard(u)).join('') : '<div class="admin-empty">Aucun compte actif</div>';
+  }catch(e){ console.error(e); }
+}
+
+function adminCard(u){
+  let details = {};
+  try{ details = JSON.parse(u.membershipMessage || '{}'); }catch(e){}
+  const statusLabel = u.accountStatus === 'pending' ? '<span class="admin-user-status status-pending">En attente</span>' :
+    u.accountStatus === 'member' ? '<span class="admin-user-status status-member">Membre</span>' :
+    '<span class="admin-user-status status-active">Actif</span>';
+
+  const cinImgs = (details.cinRecto || details.cinVerso) ? `
+    <div class="admin-cin-imgs">
+      ${details.cinRecto ? `<img src="${details.cinRecto}" onclick="openCIN('${u.id}','recto')" title="CIN Recto">` : ''}
+      ${details.cinVerso ? `<img src="${details.cinVerso}" onclick="openCIN('${u.id}','verso')" title="CIN Verso">` : ''}
+    </div>` : '';
+
+  const actions = u.accountStatus === 'pending' ? `
+    <div class="admin-actions">
+      <button class="btn-approve" onclick="adminValidate('${u.id}', true)">✅ Valider</button>
+      <button class="btn-reject" onclick="adminValidate('${u.id}', false)">❌ Refuser</button>
+    </div>` : '';
+
+  return `<div class="admin-user-card" id="card-${u.id}">
+    <div class="admin-user-name">${u.firstName} ${u.lastName}</div>
+    ${statusLabel}
+    <div class="admin-user-info">📧 ${u.email}</div>
+    ${details.cin ? `<div class="admin-user-info">🪪 CIN : ${details.cin}</div>` : ''}
+    ${details.phone ? `<div class="admin-user-info">📞 ${details.phone}</div>` : ''}
+    ${details.school ? `<div class="admin-user-info">🏫 ${details.school}</div>` : ''}
+    ${details.field ? `<div class="admin-user-info">📚 ${details.field} — ${details.level || ''}</div>` : ''}
+    ${details.role ? `<div class="admin-user-info">🚪 Porte : ${details.role}</div>` : ''}
+    ${details.promotion ? `<div class="admin-user-info">🎓 Promo : ${details.promotion}</div>` : ''}
+    ${cinImgs}
+    ${actions}
+  </div>`;
+}
+
+// Stocker temporairement les données CIN pour la lightbox
+const _cinStore = {};
+async function openCIN(userId, side){
+  // Re-fetch pour avoir les données fraîches
+  const res = await fetch(API_BASE + '/api/admin/users', { headers:{'x-admin-code': adminCode} });
+  const data = await res.json();
+  const user = (data.users||[]).find(u => u.id === userId);
+  if(!user) return;
+  let details = {};
+  try{ details = JSON.parse(user.membershipMessage || '{}'); }catch(e){}
+  const src = side === 'recto' ? details.cinRecto : details.cinVerso;
+  if(!src) return;
+  document.getElementById('cinLightboxImg').src = src;
+  document.getElementById('cinLightbox').classList.add('show');
+}
+
+async function adminValidate(userId, approve){
+  try{
+    const res = await fetch(API_BASE + '/api/admin/validate', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-admin-code': adminCode },
+      body: JSON.stringify({ userId, approve, adminCode })
+    });
+    if(!res.ok){ alert('Erreur lors de la validation.'); return; }
+    await loadAdminUsers();
+  }catch(e){ alert('Erreur réseau.'); }
+}
 </script>
 </body>
 </html>

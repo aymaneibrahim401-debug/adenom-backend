@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/join.js": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/images/(.*)",

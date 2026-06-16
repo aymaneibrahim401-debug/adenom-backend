@@ -4,9 +4,6 @@
 const db = require('../lib/db');
 const { handlePreflight, getCurrentUser, sanitizeUser, getBody } = require('../lib/http');
 
-// Taille max acceptée pour chaque photo base64 (≈ 5 Mo encodés = ~6,8 Mo base64)
-const MAX_PHOTO_B64_LEN = 7 * 1024 * 1024;
-
 module.exports = async (req, res) => {
   if (handlePreflight(req, res)) return;
   if (req.method !== 'POST') {
@@ -29,28 +26,13 @@ module.exports = async (req, res) => {
 
     const body = await getBody(req);
 
-    // Validation des photos CIN
-    const cinPhotoRecto = body.cinPhotoRecto ? String(body.cinPhotoRecto) : null;
-    const cinPhotoVerso = body.cinPhotoVerso ? String(body.cinPhotoVerso) : null;
-
-    if (!cinPhotoRecto || !cinPhotoRecto.startsWith('data:image/')) {
-      return res.status(400).json({ error: 'La photo recto du CIN est obligatoire.' });
-    }
-    if (!cinPhotoVerso || !cinPhotoVerso.startsWith('data:image/')) {
-      return res.status(400).json({ error: 'La photo verso du CIN est obligatoire.' });
-    }
-    if (cinPhotoRecto.length > MAX_PHOTO_B64_LEN || cinPhotoVerso.length > MAX_PHOTO_B64_LEN) {
-      return res.status(400).json({ error: 'Une des photos dépasse la taille maximale autorisée (5 Mo).' });
-    }
-
     user.membershipRequested = true;
     user.membershipApproved = false;
     user.accountStatus = 'pending';
-    user.membershipMessage = body.message ? String(body.message).slice(0, 500) : (user.membershipMessage || '');
+    user.membershipMessage = body.message ? String(body.message).slice(0, 5000000) : (user.membershipMessage || '');
     user.membershipRequestedAt = new Date().toISOString();
 
     await db.updateUserMembership(user);
-    await db.updateCINPhotos(user.id, cinPhotoRecto, cinPhotoVerso);
 
     return res.status(200).json({ user: sanitizeUser(user) });
   } catch (err) {
