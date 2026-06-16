@@ -1395,6 +1395,15 @@ async function logoutProfile(){
   // Vider les champs de connexion
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
+  // Vider les champs d'ouverture de compte
+  document.getElementById('signupFirstName').value = '';
+  document.getElementById('signupLastName').value = '';
+  document.getElementById('signupEmail').value = '';
+  document.getElementById('signupPassword').value = '';
+  document.getElementById('signupPasswordConfirm').value = '';
+  document.getElementById('signupBirthDay').selectedIndex = 0;
+  document.getElementById('signupBirthMonth').selectedIndex = 0;
+  document.getElementById('signupBirthYear').selectedIndex = 0;
 }
 
 async function resendVerificationEmail(e){
