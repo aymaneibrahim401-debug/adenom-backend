@@ -1182,6 +1182,8 @@ async function handleAuthSubmit(e, type){
       switchAuthPanel('success');
       // Bloquer la fermeture du modal jusqu'à vérification
       waitingEmailVerification = true;
+      // Cacher le bouton ✕
+      document.querySelector('.auth-close').style.display = 'none';
       // Polling : vérifier toutes les 3s si l'email est confirmé
       if(emailVerifPollingInterval) clearInterval(emailVerifPollingInterval);
       emailVerifPollingInterval = setInterval(async () => {
