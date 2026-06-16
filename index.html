@@ -508,9 +508,42 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 .auth-switch a{color:#0070ba;font-weight:700;text-decoration:none;cursor:pointer;}
 
 .auth-success{text-align:center;padding:30px 10px 10px;}
-.auth-success .auth-success-icon{font-size:46px;margin-bottom:14px;}
+.auth-success .auth-success-icon{font-size:46px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;}
 .auth-success h3{color:var(--text-title);font-size:18px;margin-bottom:8px;}
 .auth-success p{color:var(--text-secondary2);font-size:13px;line-height:1.6;}
+
+/* Spinner animé (demande en attente) */
+.auth-icon-spinner{
+  width:52px;height:52px;border-radius:50%;
+  border:4px solid #e8f0eb;
+  border-top-color:#1b4332;
+  animation:auth-spin 0.9s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes auth-spin{ to{ transform:rotate(360deg); } }
+
+/* Checkmark animé (succès) */
+.auth-icon-check{
+  width:52px;height:52px;border-radius:50%;
+  background:#1b4332;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+  animation:auth-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes auth-pop{ from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+.auth-icon-check svg{ width:26px;height:26px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round; }
+.auth-icon-check-path{ stroke-dasharray:30;stroke-dashoffset:30;animation:auth-draw 0.4s 0.3s forwards; }
+@keyframes auth-draw{ to{ stroke-dashoffset:0; } }
+
+/* Enveloppe animée (email envoyé) */
+.auth-icon-email{
+  width:52px;height:52px;border-radius:50%;
+  background:#0070ba;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+  animation:auth-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+.auth-icon-email svg{ width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
 
 .auth-step{
   display:inline-block;background:#0070ba;color:white;
@@ -925,7 +958,11 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 
     <!-- SUCCES -->
     <div id="authSuccess" class="auth-success" style="display:none;">
-      <div class="auth-success-icon">✅</div>
+      <div class="auth-success-icon" id="authSuccessIcon">
+        <div class="auth-icon-check">
+          <svg viewBox="0 0 24 24"><polyline class="auth-icon-check-path" points="4,13 9,18 20,7"/></svg>
+        </div>
+      </div>
       <h3 id="authSuccessTitle">Merci !</h3>
       <p id="authSuccessText">Votre demande a bien été envoyée.</p>
     </div>
@@ -947,13 +984,27 @@ document.getElementById('heroBg').style.backgroundImage = "url('" + _heroBgData 
 /* MODALES Connexion / Inscription / Rejoindre */
 let authFlow = null; // 'join' = l'utilisateur veut rejoindre la communauté (passe d'abord par la création de compte)
 
+function setSuccessIcon(type){
+  const el = document.getElementById('authSuccessIcon');
+  if(!el) return;
+  if(type === 'spinner'){
+    el.innerHTML = '<div class="auth-icon-spinner"></div>';
+  } else if(type === 'email'){
+    el.innerHTML = '<div class="auth-icon-email"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg></div>';
+  } else {
+    // check (défaut)
+    el.innerHTML = '<div class="auth-icon-check"><svg viewBox="0 0 24 24"><polyline class="auth-icon-check-path" points="4,13 9,18 20,7"/></svg></div>';
+  }
+}
+
 function openAuthModal(type){
   document.getElementById('authOverlay').classList.add('show');
   if(type === 'join'){
     if(currentUser){
       // Demande déjà envoyée : afficher un message d'information
       if(currentUser.membershipRequested || currentUser.accountStatus === 'pending'){
-        document.getElementById('authSuccessTitle').textContent = '⏳ Demande en cours de traitement';
+        setSuccessIcon('spinner');
+        document.getElementById('authSuccessTitle').textContent = 'Demande en cours de traitement';
         document.getElementById('authSuccessText').textContent = 'Votre demande d\'adhésion est en cours de traitement. Elle pourrait être refusée si vous ne figurez pas sur la liste des membres réels sur le livre d\'ADENOM.';
         switchAuthPanel('success');
         document.body.style.overflow = 'hidden';
@@ -1090,6 +1141,7 @@ async function handleAuthSubmit(e, type){
       const data = await apiRequest('/api/login', { method:'POST', body:{ email, password } });
       const user = data && data.user ? data.user : null;
       currentUser = user;
+      setSuccessIcon('check');
       document.getElementById('authSuccessTitle').textContent = 'Connexion réussie !';
       document.getElementById('authSuccessText').textContent = `Bienvenue, ${user ? user.firstName : ''} !`;
       authFlow = null;
@@ -1145,6 +1197,7 @@ async function handleAuthSubmit(e, type){
       });
 
       // Le compte n'est pas ouvert : l'utilisateur doit confirmer son email
+      setSuccessIcon('email');
       document.getElementById('authSuccessTitle').textContent = '📧 Vérifiez votre email !';
       document.getElementById('authSuccessText').textContent = `Un lien de confirmation a été envoyé à ${email}. Cliquez dessus pour activer votre compte. Pensez à vérifier vos spams.`;
       switchAuthPanel('success');
@@ -1190,6 +1243,7 @@ async function handleAuthSubmit(e, type){
       const data = await apiRequest('/api/join', { method:'POST', body:{ message } });
       currentUser = data && data.user ? data.user : currentUser;
 
+      setSuccessIcon('check');
       document.getElementById('authSuccessTitle').textContent = 'Demande envoyée !';
       document.getElementById('authSuccessText').textContent = 'Merci pour votre intérêt, nous reviendrons vers vous très bientôt.';
       authFlow = null;
@@ -1208,6 +1262,7 @@ async function handleAuthSubmit(e, type){
   if(type === 'forgot'){
     // Pas de service d'envoi d'email disponible : on confirme simplement la
     // réception de la demande côté interface.
+    setSuccessIcon('check');
     document.getElementById('authSuccessTitle').textContent = 'Demande envoyée !';
     document.getElementById('authSuccessText').textContent = "Si un compte existe avec cet email, des instructions vous seront envoyées.";
     switchAuthPanel('success');
