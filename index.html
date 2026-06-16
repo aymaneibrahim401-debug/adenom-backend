@@ -951,6 +951,14 @@ function openAuthModal(type){
   document.getElementById('authOverlay').classList.add('show');
   if(type === 'join'){
     if(currentUser){
+      // Demande déjà envoyée : afficher un message d'information
+      if(currentUser.membershipRequested || currentUser.accountStatus === 'pending'){
+        document.getElementById('authSuccessTitle').textContent = '⏳ Demande en cours de traitement';
+        document.getElementById('authSuccessText').textContent = 'Votre demande d\'adhésion est en cours de traitement. Elle pourrait être refusée si vous ne figurez pas sur la liste des membres réels sur le livre d\'ADENOM.';
+        switchAuthPanel('success');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
       // Déjà connecté : on passe directement au formulaire d'adhésion
       authFlow = null;
       switchAuthPanel('join');
