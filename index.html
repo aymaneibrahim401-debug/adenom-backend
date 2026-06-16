@@ -141,6 +141,37 @@ header.hide-on-scroll{
 }
 .profile-menu.open{opacity:1;visibility:visible;transform:translateY(0);}
 
+/* Photo + nom en haut */
+.profile-menu-top{
+  display:flex;gap:12px;align-items:center;
+  padding-bottom:14px;border-bottom:1px solid var(--border-color);
+  margin-bottom:12px;
+}
+.profile-photo-wrap{
+  width:52px;height:52px;border-radius:50%;background:#e8eef5;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;flex-shrink:0;overflow:hidden;
+  border:2px solid #e8eef5;transition:0.2s;
+}
+.profile-photo-wrap:hover .profile-photo-edit{opacity:1;}
+.profile-photo-edit{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,0.45);color:#fff;font-size:11px;
+  text-align:center;padding:2px 0;opacity:0;transition:0.2s;
+}
+#profileMenuName{font-size:14px;color:var(--text-title);}
+
+/* Notification statut */
+.profile-notif{
+  display:flex;gap:8px;align-items:flex-start;
+  background:#f0f6ff;border-left:3px solid #0070ba;
+  border-radius:0 10px 10px 0;padding:10px 12px;
+  margin-bottom:12px;font-size:12px;color:#003087;line-height:1.5;
+}
+.profile-notif.pending{background:#fff7e6;border-left-color:#f5a623;color:#7a4f00;}
+.profile-notif.member{background:#e9fbe9;border-left-color:#28a745;color:#155724;}
+.profile-notif span:first-child{font-size:18px;flex-shrink:0;}
+
 .profile-menu-status{
   display:flex;gap:10px;align-items:flex-start;
   padding-bottom:14px;border-bottom:1px solid var(--border-color);
@@ -624,12 +655,23 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
       <span class="profile-bubble-dot"></span>
     </button>
     <div class="profile-menu" id="profileMenu">
-      <div class="profile-menu-status">
-        <span class="profile-menu-icon" id="profileMenuIcon">⏳</span>
-        <div>
-          <strong id="profileMenuName">Compte en attente</strong>
-          <p id="profileMenuText">Votre demande d'adhésion est en cours de validation par l'administrateur.</p>
+      <!-- Photo + Nom -->
+      <div class="profile-menu-top">
+        <div class="profile-photo-wrap" onclick="document.getElementById('profilePhotoInput').click()">
+          <img id="profilePhotoImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          <svg id="profilePhotoDefault" viewBox="0 0 24 24" fill="#aaa" width="36" height="36"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
+          <div class="profile-photo-edit">📷</div>
         </div>
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none;" onchange="handleProfilePhoto(event)">
+        <div>
+          <strong id="profileMenuName">Mon compte</strong>
+          <div id="profileMenuSubtitle" style="font-size:11px;color:#888;"></div>
+        </div>
+      </div>
+      <!-- Notification statut -->
+      <div class="profile-notif" id="profileNotif" style="display:none;">
+        <span id="profileNotifIcon">⏳</span>
+        <span id="profileNotifText"></span>
       </div>
       <div class="profile-menu-status" id="emailVerifyBanner" style="display:none; background:#fff7e6;">
         <span class="profile-menu-icon">✉️</span>
@@ -638,15 +680,14 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <p>Cliquez sur le lien envoyé par email pour confirmer votre adresse. <a href="#" onclick="return resendVerificationEmail(event)" id="resendVerifyLink">Renvoyer l'email</a></p>
         </div>
       </div>
+      <div class="profile-menu-member-nav" id="memberNavLinks" style="display:none;">
+        <a href="#" onclick="openMemberDashboard();closeProfileMenu();return false;">📰 Actualités</a>
+        <a href="#" onclick="openMessaging();closeProfileMenu();return false;">💬 Messagerie groupes</a>
+      </div>
       <div class="profile-menu-nav">
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
         <a href="#apropos" onclick="closeProfileMenu()">ℹ️ À propos</a>
         <a href="#contact" onclick="closeProfileMenu()">📞 Contact</a>
-      </div>
-      <div class="profile-menu-member-nav" id="memberNavLinks" style="display:none;">
-        <div style="font-size:11px;color:#aaa;margin:10px 0 6px;font-weight:700;letter-spacing:0.5px;">ESPACE MEMBRE</div>
-        <a href="#" onclick="openMemberDashboard();closeProfileMenu();return false;">📰 Actualités</a>
-        <a href="#" onclick="openMessaging();closeProfileMenu();return false;">💬 Messagerie groupes</a>
       </div>
       <button class="profile-menu-logout" onclick="logoutProfile()">Se déconnecter</button>
     </div>
@@ -672,7 +713,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
     <p class="hero-text">
       ADENOM est une communauté d'étudiants issus de plusieurs établissements d'enseignement supérieur, unis par l'entraide, le partage de connaissances et la réussite collective.
     </p>
-    <a href="#" class="hero-cta" onclick="openAuthModal('join');return false;">Rejoindre la communauté →</a>
+    <a href="#" class="hero-cta" id="heroCta" onclick="openAuthModal('join');return false;">Rejoindre la communauté →</a>
   </div>
 
   <div class="scroll-indicator">
@@ -923,6 +964,15 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <label>Porte</label>
           <input type="text" id="joinRole" required placeholder="Ex : PVE1">
           <span class="auth-hint">⚠️ Si vous ne résidez plus dans le campus, ajoutez <strong>(ancien)</strong> après votre porte.</span>
+        </div>
+        <div class="auth-field">
+          <label>Poste</label>
+          <select id="joinPoste" required style="width:100%;padding:10px 12px;border:1.5px solid #e8eef5;border-radius:10px;font-size:14px;background:#fff;color:#333;">
+            <option value="">-- Sélectionner --</option>
+            <option value="membre">👤 Membre</option>
+            <option value="bureau">🏅 Membre de bureau</option>
+          </select>
+          <span class="auth-hint">⚠️ Membre = membre ordinaire · Membre de bureau = responsable ou dirigeant.</span>
         </div>
         <div class="auth-field">
           <label>Numéro joignable</label>
@@ -1296,6 +1346,7 @@ async function handleAuthSubmit(e, type){
         level: document.getElementById('joinLevel').value.trim(),
         promotion: document.getElementById('joinPromotion').value.trim(),
         role: document.getElementById('joinRole').value.trim(),
+        poste: document.getElementById('joinPoste').value,
         phone: document.getElementById('joinPhone').value.trim(),
         cinRecto: cinRectoB64,
         cinVerso: cinVersoB64
@@ -1393,9 +1444,12 @@ function updateAccountUI(){
   const hamburger = document.getElementById('hamburgerBtn');
   const memberBanner = document.getElementById('memberBanner');
   const nameEl = document.getElementById('profileMenuName');
-  const textEl = document.getElementById('profileMenuText');
-  const iconEl = document.getElementById('profileMenuIcon');
+  const subtitleEl = document.getElementById('profileMenuSubtitle');
+  const notif = document.getElementById('profileNotif');
+  const notifIcon = document.getElementById('profileNotifIcon');
+  const notifText = document.getElementById('profileNotifText');
   const dot = document.querySelector('.profile-bubble-dot');
+  const heroCta = document.getElementById('heroCta');
 
   const isLoggedIn = !!currentUser;
 
@@ -1407,23 +1461,32 @@ function updateAccountUI(){
     if(memberBanner) memberBanner.style.display = '';
 
     const fullName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
+    if(nameEl) nameEl.textContent = fullName || 'Mon compte';
+
+    // Charger photo profil
+    loadProfilePhoto();
+
     if(currentUser.accountStatus === 'pending'){
-      if(nameEl) nameEl.textContent = 'Compte en attente';
-      if(textEl) textEl.textContent = `Bonjour ${fullName}, votre demande d'adhésion est en cours de validation par l'administrateur.`;
-      if(iconEl) iconEl.textContent = '⏳';
+      if(subtitleEl) subtitleEl.textContent = 'Demande en attente';
+      if(notif){ notif.style.display='flex'; notif.className='profile-notif pending'; }
+      if(notifIcon) notifIcon.textContent = '⏳';
+      if(notifText) notifText.textContent = 'Votre demande d\'adhésion est en cours de validation par l\'administrateur.';
       if(dot) dot.style.background = '#f5a623';
+      if(heroCta) heroCta.style.display = 'none';
     } else if(currentUser.accountStatus === 'member'){
-      if(nameEl) nameEl.textContent = fullName || 'Membre ADENOM';
-      if(textEl) textEl.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
-      if(iconEl) iconEl.textContent = '✅';
+      if(subtitleEl) subtitleEl.textContent = 'Membre ADENOM ✅';
+      if(notif){ notif.style.display='flex'; notif.className='profile-notif member'; }
+      if(notifIcon) notifIcon.textContent = '🎉';
+      if(notifText) notifText.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
       if(dot) dot.style.background = '#2ecc71';
       const mnl = document.getElementById('memberNavLinks');
       if(mnl) mnl.style.display = '';
+      if(heroCta) heroCta.style.display = 'none';
     } else {
-      if(nameEl) nameEl.textContent = fullName || 'Mon compte';
-      if(textEl) textEl.textContent = 'Votre compte est actif. Rejoignez la communauté pour devenir membre.';
-      if(iconEl) iconEl.textContent = '👤';
+      if(subtitleEl) subtitleEl.textContent = 'Compte actif';
+      if(notif) notif.style.display = 'none';
       if(dot) dot.style.background = '#0070ba';
+      if(heroCta) heroCta.style.display = '';
     }
 
     // Encart séparé : email non confirmé
@@ -1435,9 +1498,52 @@ function updateAccountUI(){
     if(hamburger) hamburger.style.display = '';
     if(profileWrap) profileWrap.style.display = 'none';
     if(memberBanner) memberBanner.style.display = 'none';
+    if(heroCta) heroCta.style.display = '';
     const mnl = document.getElementById('memberNavLinks');
     if(mnl) mnl.style.display = 'none';
     closeProfileMenu();
+  }
+}
+
+// Gestion photo de profil (localStorage par utilisateur)
+function handleProfilePhoto(event){
+  const file = event.target.files[0];
+  if(!file || !currentUser) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = e.target.result;
+    localStorage.setItem('profilePhoto_' + currentUser.id, data);
+    showProfilePhoto(data);
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadProfilePhoto(){
+  if(!currentUser) return;
+  const data = localStorage.getItem('profilePhoto_' + currentUser.id);
+  if(data){ showProfilePhoto(data); }
+  else {
+    document.getElementById('profilePhotoImg').style.display = 'none';
+    document.getElementById('profilePhotoDefault').style.display = '';
+    // Mettre à jour aussi la bulle header
+    const bubble = document.getElementById('profileBubble');
+    if(bubble){ bubble.style.backgroundImage=''; bubble.style.backgroundSize=''; }
+  }
+}
+
+function showProfilePhoto(data){
+  const img = document.getElementById('profilePhotoImg');
+  const def = document.getElementById('profilePhotoDefault');
+  if(img){ img.src = data; img.style.display = ''; }
+  if(def) def.style.display = 'none';
+  // Afficher aussi dans la bulle header
+  const bubble = document.getElementById('profileBubble');
+  if(bubble){
+    bubble.style.backgroundImage = `url(${data})`;
+    bubble.style.backgroundSize = 'cover';
+    bubble.style.backgroundPosition = 'center';
+    const svg = bubble.querySelector('svg');
+    if(svg) svg.style.display = 'none';
   }
 }
 
@@ -1657,7 +1763,43 @@ function closeRegionPage(){
 .admin-btn{width:100%;padding:12px;background:#003087;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
 .admin-btn:hover{background:#0070ba;}
 .admin-error{color:#e0334d;font-size:12px;margin-top:6px;display:none;text-align:center;}
-.admin-close-btn{background:none;border:none;font-size:20px;cursor:pointer;float:right;color:#888;}
+.admin-close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:#888;}
+.admin-section-title{font-size:13px;font-weight:700;color:#003087;margin:16px 0 8px;border-bottom:1px solid #e8eef5;padding-bottom:4px;}
+.admin-logout{width:100%;padding:10px;background:#f5f8fb;color:#e0334d;border:1px solid #e0334d;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;}
+.admin-empty{text-align:center;color:#aaa;font-size:13px;padding:20px 0;}
+
+/* ONGLETS */
+.admin-tabs{display:flex;gap:8px;margin:12px 0 16px;}
+.admin-tab{flex:1;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#f0f4f8;color:#555;transition:0.2s;}
+.admin-tab.active{background:#003087;color:#fff;}
+
+/* COMPOSER STYLE FACEBOOK */
+.fb-compose{background:#f5f8fb;border-radius:14px;padding:14px;border:1px solid #e8eef5;margin-bottom:4px;}
+.fb-compose-top{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.fb-avatar{width:38px;height:38px;background:#003087;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.fb-title-input{flex:1;border:none;background:transparent;font-size:14px;font-weight:700;color:#003087;outline:none;font-family:inherit;}
+.fb-title-input::placeholder{color:#aaa;font-weight:400;}
+.fb-textarea{width:100%;border:none;background:transparent;font-size:14px;color:#333;outline:none;resize:none;font-family:inherit;line-height:1.6;box-sizing:border-box;}
+.fb-textarea::placeholder{color:#aaa;}
+.fb-compose-actions{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #e8eef5;}
+.fb-action-btn{padding:7px 12px;background:#e8f0fe;color:#003087;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;}
+.fb-tag-select{flex:1;padding:7px 8px;border:1.5px solid #e8eef5;border-radius:8px;font-size:12px;background:#fff;}
+.fb-post-btn{padding:8px 16px;background:#003087;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+.fb-post-btn:hover{background:#0070ba;}
+
+/* CARDS PUBLICATION */
+.admin-actu-card{background:#fff;border:1px solid #e8eef5;border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.admin-actu-card img{width:100%;max-height:160px;object-fit:cover;}
+.admin-actu-card-body{padding:10px 12px;}
+.admin-actu-card-title{font-size:13px;font-weight:700;color:#003087;margin-bottom:4px;}
+.admin-actu-card-text{font-size:12px;color:#555;line-height:1.5;}
+.admin-actu-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;}
+.admin-actu-card-date{font-size:11px;color:#aaa;}
+.admin-actu-delete{padding:4px 10px;background:#ffeaea;color:#e0334d;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-weight:700;}
+/* Lightbox CIN */
+#cinLightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:4000;display:none;align-items:center;justify-content:center;}
+#cinLightbox.show{display:flex;}
+#cinLightbox img{max-width:90%;max-height:90%;border-radius:10px;}
 .admin-user-card{background:#f5f8fb;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #e8eef5;}
 .admin-user-name{font-weight:700;color:#003087;font-size:15px;margin-bottom:4px;}
 .admin-user-info{font-size:12px;color:#555;margin-bottom:2px;}
@@ -1672,13 +1814,6 @@ function closeRegionPage(){
 .btn-reject:hover{background:#c82333;}
 .admin-cin-imgs{display:flex;gap:6px;margin-top:8px;}
 .admin-cin-imgs img{width:48%;border-radius:6px;border:1px solid #ddd;cursor:pointer;}
-.admin-section-title{font-size:13px;font-weight:700;color:#003087;margin:16px 0 8px;border-bottom:1px solid #e8eef5;padding-bottom:4px;}
-.admin-logout{width:100%;padding:10px;background:#f5f8fb;color:#e0334d;border:1px solid #e0334d;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;}
-.admin-empty{text-align:center;color:#aaa;font-size:13px;padding:20px 0;}
-/* Lightbox CIN */
-#cinLightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:4000;display:none;align-items:center;justify-content:center;}
-#cinLightbox.show{display:flex;}
-#cinLightbox img{max-width:90%;max-height:90%;border-radius:10px;}
 </style>
 
 <div id="adminOverlay">
@@ -1694,17 +1829,67 @@ function closeRegionPage(){
       <div class="admin-error" id="adminLoginError">Code incorrect.</div>
       <button class="admin-btn" onclick="adminLogin()">Accéder</button>
     </div>
+
     <!-- DASHBOARD ADMIN -->
     <div id="adminDashboard" style="display:none;">
-      <button class="admin-close-btn" onclick="closeAdmin()">✕</button>
-      <div class="admin-title">👨‍💼 Panel Admin</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div class="admin-title" style="margin:0;">👨‍💼 Panel Admin</div>
+        <button class="admin-close-btn" onclick="closeAdmin()">✕</button>
+      </div>
       <div class="admin-subtitle" id="adminStats"></div>
-      <div class="admin-section-title">⏳ Demandes en attente</div>
-      <div id="adminPending"></div>
-      <div class="admin-section-title">✅ Membres validés</div>
-      <div id="adminMembers"></div>
-      <div class="admin-section-title">👤 Comptes actifs</div>
-      <div id="adminActives"></div>
+
+      <!-- ONGLETS -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="tabDemandes" onclick="switchAdminTab('demandes')">📋 Demandes</button>
+        <button class="admin-tab" id="tabActu" onclick="switchAdminTab('actu')">📰 Actualités</button>
+      </div>
+
+      <!-- FENÊTRE 1 : Demandes -->
+      <div id="adminTabDemandes">
+        <div class="admin-section-title">⏳ En attente</div>
+        <div id="adminPending"></div>
+        <div class="admin-section-title">✅ Membres validés</div>
+        <div id="adminMembers"></div>
+        <div class="admin-section-title">👤 Comptes actifs</div>
+        <div id="adminActives"></div>
+      </div>
+
+      <!-- FENÊTRE 2 : Publier actualités -->
+      <div id="adminTabActu" style="display:none;">
+        <div class="admin-section-title">✏️ Nouvelle publication</div>
+        <!-- Composer style Facebook -->
+        <div class="fb-compose">
+          <div class="fb-compose-top">
+            <div class="fb-avatar">👨‍💼</div>
+            <input type="text" id="adminActuTitle" placeholder="Titre de la publication..." class="fb-title-input">
+          </div>
+          <textarea id="adminActuText" rows="4" placeholder="Quoi de neuf pour la communauté ADENOM ?" class="fb-textarea"></textarea>
+
+          <!-- Aperçu image -->
+          <div id="adminImgPreviewWrap" style="display:none;position:relative;margin-top:8px;">
+            <img id="adminImgPreview" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;">
+            <button onclick="removeAdminImg()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;">✕</button>
+          </div>
+
+          <div class="fb-compose-actions">
+            <label class="fb-action-btn" for="adminImgInput">
+              🖼️ Photo
+              <input type="file" id="adminImgInput" accept="image/*" style="display:none;" onchange="previewAdminImg(event)">
+            </label>
+            <select id="adminActuTag" class="fb-tag-select">
+              <option value="info">ℹ️ Info</option>
+              <option value="event">📅 Événement</option>
+              <option value="urgent">🚨 Urgent</option>
+            </select>
+            <button class="fb-post-btn" onclick="adminPostActu()">Publier</button>
+          </div>
+        </div>
+
+        <!-- Liste des publications existantes -->
+        <div class="admin-section-title" style="margin-top:20px;">📌 Publications</div>
+        <div id="adminActuList"></div>
+      </div>
+
       <button class="admin-logout" onclick="adminLogout()">Se déconnecter</button>
     </div>
   </div>
@@ -1946,15 +2131,15 @@ function renderActualities(){
   if(!list.length){ el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;">Aucune actualité pour le moment.</p>'; return; }
   el.innerHTML = list.map(a => `
     <div class="actu-card">
+      ${a.image ? `<img src="${a.image}" alt="" style="width:100%;border-radius:10px 10px 0 0;max-height:200px;object-fit:cover;display:block;">` : ''}
       <div class="actu-body">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span>
           ${a.pin?'<span class="actu-pin">📌 Épinglé</span>':''}
         </div>
-        <div class="actu-title-text">${a.title}</div>
-        <div class="actu-text">${a.text}</div>
+        ${a.title?`<div class="actu-title-text">${a.title}</div>`:''}
+        ${a.text?`<div class="actu-text">${a.text}</div>`:''}
         <div class="actu-date">🕐 ${a.date}</div>
-        ${isAdminSession?`<button onclick="deleteActu(${a.id})" style="margin-top:8px;padding:4px 12px;font-size:11px;background:#ffeaea;color:#e0334d;border:none;border-radius:8px;cursor:pointer;">🗑 Supprimer</button>`:''}
       </div>
     </div>
   `).join('');
@@ -2004,102 +2189,12 @@ function closeMemberDashOnOverlay(e){
 }
 
 // ============ MESSAGERIE GROUPES ============
-const MSG_KEY_PREFIX = 'adenom_msg_';
-const GROUPS = [
-  {id:'general',name:'🏠 Général',desc:'Discussion générale pour tous les membres',color:'#0070ba',bg:'#e3f0ff'},
-  {id:'revision',name:'📚 Révisions',desc:'Entraide et partage de cours',color:'#28a745',bg:'#e8f5e9'},
-  {id:'evenements',name:'📅 Événements',desc:'Organisation et info sur les événements',color:'#e07b00',bg:'#fff3e0'},
-  {id:'annonces',name:'📢 Annonces',desc:'Annonces officielles du bureau ADENOM',color:'#6f42c1',bg:'#f3e8ff'},
-  {id:'loisirs',name:'🎉 Loisirs',desc:'Sorties, sports, détente',color:'#e0334d',bg:'#ffeaea'},
-];
-
+// ============ MESSAGERIE — VRAIE BASE DE DONNÉES ============
 let currentGroup = null;
+let msgPollInterval = null;
+let cachedGroups = [];
 
-function loadGroupMessages(gid){
-  try{ return JSON.parse(localStorage.getItem(MSG_KEY_PREFIX+gid)||'[]'); }
-  catch(e){ return []; }
-}
-function saveGroupMessages(gid, msgs){
-  localStorage.setItem(MSG_KEY_PREFIX+gid, JSON.stringify(msgs));
-}
-
-function renderGroupList(){
-  const el = document.getElementById('msgGroupList');
-  el.innerHTML = GROUPS.map(g => {
-    const msgs = loadGroupMessages(g.id);
-    const last = msgs.length ? msgs[msgs.length-1] : null;
-    const preview = last ? `${last.senderName}: ${last.text.substring(0,40)}${last.text.length>40?'…':''}` : 'Aucun message';
-    return `<div class="msg-group-item" onclick="openGroup('${g.id}')">
-      <div class="msg-group-avatar" style="background:${g.bg};color:${g.color};">${g.name.split(' ')[0]}</div>
-      <div class="msg-group-info">
-        <div class="msg-group-name">${g.name}</div>
-        <div class="msg-group-preview">${preview}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openGroup(gid){
-  currentGroup = GROUPS.find(g=>g.id===gid);
-  if(!currentGroup) return;
-  document.getElementById('chatGroupName').textContent = currentGroup.name;
-  document.getElementById('chatGroupSub').textContent = currentGroup.desc;
-  document.getElementById('msgGroupList').style.display = 'none';
-  const cv = document.getElementById('msgChatView');
-  cv.style.display='flex';
-  document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
-  renderChatMessages();
-  // Init messages si vide pour général
-  if(gid==='general' && loadGroupMessages('general').length===0){
-    const msgs = [{id:1,senderId:'system',senderName:'Système',text:'Bienvenue dans le groupe Général ! Ici tous les membres peuvent échanger librement.',time:'Aujourd\'hui'}];
-    saveGroupMessages('general',msgs);
-    renderChatMessages();
-  }
-}
-
-function backToGroups(){
-  currentGroup = null;
-  document.getElementById('msgGroupList').style.display='';
-  document.getElementById('msgChatView').style.display='none';
-  document.getElementById('msgHeaderTitle').textContent='💬 Messagerie';
-  renderGroupList();
-}
-
-function renderChatMessages(){
-  if(!currentGroup) return;
-  const msgs = loadGroupMessages(currentGroup.id);
-  const el = document.getElementById('chatMessages');
-  const myId = currentUser ? (currentUser.id||currentUser.email) : 'me';
-  el.innerHTML = msgs.length ? msgs.map(m => {
-    const isMe = m.senderId === myId;
-    return `<div class="msg-bubble-wrap${isMe?' mine':''}">
-      ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
-      <div>
-        ${!isMe?`<div class="msg-sender">${m.senderName}</div>`:''}
-        <div class="msg-bubble${isMe?' mine':''}">${m.text}<div class="msg-bubble-meta">${m.time}</div></div>
-      </div>
-    </div>`;
-  }).join('') : '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
-  el.scrollTop = el.scrollHeight;
-}
-
-function sendMsg(){
-  if(!currentUser || !currentGroup) return;
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if(!text) return;
-  const msgs = loadGroupMessages(currentGroup.id);
-  const myId = currentUser.id || currentUser.email;
-  const fullName = `${currentUser.firstName||''} ${currentUser.lastName||''}`.trim() || 'Membre';
-  const now = new Date();
-  const time = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  msgs.push({id:Date.now(),senderId:myId,senderName:fullName,text,time});
-  saveGroupMessages(currentGroup.id, msgs);
-  input.value='';
-  renderChatMessages();
-}
-
-function openMessaging(){
+async function openMessaging(){
   if(!currentUser){ openAuthModal('login'); return; }
   if(currentUser.accountStatus !== 'member'){
     alert('La messagerie est réservée aux membres validés.');
@@ -2107,15 +2202,123 @@ function openMessaging(){
   }
   document.getElementById('msgOverlay').classList.add('show');
   document.body.style.overflow='hidden';
-  renderGroupList();
+  await renderGroupList();
 }
+
 function closeMessaging(){
   document.getElementById('msgOverlay').classList.remove('show');
   document.body.style.overflow='';
+  stopMsgPoll();
   backToGroups();
 }
+
 function closeMsgOnOverlay(e){
   if(e.target===document.getElementById('msgOverlay')) closeMessaging();
+}
+
+async function renderGroupList(){
+  const el = document.getElementById('msgGroupList');
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">Chargement...</div>';
+  try{
+    const data = await apiRequest('/api/messages/groups');
+    cachedGroups = data.groups || [];
+    el.innerHTML = cachedGroups.map(g => {
+      const preview = g.lastMessage
+        ? `${g.lastMessage.senderName}: ${g.lastMessage.text.substring(0,40)}${g.lastMessage.text.length>40?'…':''}`
+        : 'Aucun message';
+      const badge = g.isPromo ? `<span style="background:#003087;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">Privé</span>` : '';
+      return `<div class="msg-group-item" onclick="openGroup('${g.id}')">
+        <div class="msg-group-avatar" style="background:${g.bg};color:${g.color};">${g.name.split(' ')[0]}</div>
+        <div class="msg-group-info">
+          <div class="msg-group-name">${g.name}${badge}</div>
+          <div class="msg-group-preview">${preview}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#e0334d;font-size:13px;">Erreur de chargement.</div>';
+  }
+}
+
+async function openGroup(gid){
+  currentGroup = cachedGroups.find(g=>g.id===gid);
+  if(!currentGroup) return;
+  document.getElementById('chatGroupName').textContent = currentGroup.name;
+  document.getElementById('chatGroupSub').textContent = currentGroup.desc;
+  document.getElementById('msgGroupList').style.display = 'none';
+  const cv = document.getElementById('msgChatView');
+  cv.style.display = 'flex';
+  document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
+  await loadAndRenderMessages();
+  // Polling toutes les 4s
+  stopMsgPoll();
+  msgPollInterval = setInterval(loadAndRenderMessages, 4000);
+}
+
+function backToGroups(){
+  stopMsgPoll();
+  currentGroup = null;
+  document.getElementById('msgGroupList').style.display = '';
+  document.getElementById('msgChatView').style.display = 'none';
+  document.getElementById('msgHeaderTitle').textContent = '💬 Messagerie';
+  renderGroupList();
+}
+
+function stopMsgPoll(){
+  if(msgPollInterval){ clearInterval(msgPollInterval); msgPollInterval = null; }
+}
+
+let _lastMsgCount = 0;
+async function loadAndRenderMessages(){
+  if(!currentGroup) return;
+  try{
+    const data = await apiRequest('/api/messages/list?group=' + currentGroup.id);
+    const msgs = data.messages || [];
+    // Ne re-render que si nouveaux messages
+    if(msgs.length !== _lastMsgCount){
+      _lastMsgCount = msgs.length;
+      renderChatMessages(msgs);
+    }
+  }catch(e){ console.error(e); }
+}
+
+function renderChatMessages(msgs){
+  const el = document.getElementById('chatMessages');
+  if(!msgs || !msgs.length){
+    el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
+    return;
+  }
+  const myId = currentUser ? currentUser.id : '';
+  el.innerHTML = msgs.map(m => {
+    const isMe = m.userId === myId;
+    const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="msg-bubble-wrap${isMe?' mine':''}">
+      ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
+      <div>
+        ${!isMe?`<div class="msg-sender">${m.senderName}</div>`:''}
+        <div class="msg-bubble${isMe?' mine':''}">${m.text}<div class="msg-bubble-meta">${time}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMsg(){
+  if(!currentUser || !currentGroup) return;
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  try{
+    await apiRequest('/api/messages/send', {
+      method: 'POST',
+      body: { groupId: currentGroup.id, text }
+    });
+    await loadAndRenderMessages();
+  }catch(e){
+    input.value = text; // remettre si erreur
+    alert('Erreur d\'envoi.');
+  }
 }
 </script>
 
@@ -2126,6 +2329,82 @@ function closeMsgOnOverlay(e){
 
 <script>
 let adminCode = null;
+let adminImgData = null;
+
+function switchAdminTab(tab){
+  document.getElementById('adminTabDemandes').style.display = tab==='demandes' ? '' : 'none';
+  document.getElementById('adminTabActu').style.display = tab==='actu' ? '' : 'none';
+  document.getElementById('tabDemandes').className = 'admin-tab' + (tab==='demandes'?' active':'');
+  document.getElementById('tabActu').className = 'admin-tab' + (tab==='actu'?' active':'');
+  if(tab==='actu') renderAdminActuList();
+}
+
+function previewAdminImg(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    adminImgData = e.target.result;
+    document.getElementById('adminImgPreview').src = adminImgData;
+    document.getElementById('adminImgPreviewWrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAdminImg(){
+  adminImgData = null;
+  document.getElementById('adminImgPreviewWrap').style.display = 'none';
+  document.getElementById('adminImgPreview').src = '';
+  document.getElementById('adminImgInput').value = '';
+}
+
+function adminPostActu(){
+  const title = document.getElementById('adminActuTitle').value.trim();
+  const text = document.getElementById('adminActuText').value.trim();
+  const tag = document.getElementById('adminActuTag').value;
+  if(!title && !text){ alert('Ajoutez un titre ou un texte.'); return; }
+  const list = loadActualities();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  list.unshift({
+    id: Date.now(), tag, title: title||'', text: text||'',
+    date: dateStr, pin: false,
+    image: adminImgData || null
+  });
+  saveActualities(list);
+  // Reset
+  document.getElementById('adminActuTitle').value = '';
+  document.getElementById('adminActuText').value = '';
+  removeAdminImg();
+  renderAdminActuList();
+}
+
+function renderAdminActuList(){
+  const list = loadActualities();
+  const el = document.getElementById('adminActuList');
+  if(!list.length){ el.innerHTML='<div class="admin-empty">Aucune publication</div>'; return; }
+  el.innerHTML = list.map(a => `
+    <div class="admin-actu-card">
+      ${a.image ? `<img src="${a.image}" alt="">` : ''}
+      <div class="admin-actu-card-body">
+        <div style="margin-bottom:4px;"><span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span></div>
+        ${a.title ? `<div class="admin-actu-card-title">${a.title}</div>` : ''}
+        ${a.text ? `<div class="admin-actu-card-text">${a.text}</div>` : ''}
+        <div class="admin-actu-card-footer">
+          <span class="admin-actu-card-date">🕐 ${a.date}</span>
+          <button class="admin-actu-delete" onclick="adminDeleteActu(${a.id})">🗑 Supprimer</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function adminDeleteActu(id){
+  if(!confirm('Supprimer cette publication ?')) return;
+  saveActualities(loadActualities().filter(a=>a.id!==id));
+  renderAdminActuList();
+  renderActualities();
+}
 
 // Ouvrir le panel admin via triple tap sur le footer logo
 (function(){
@@ -2236,6 +2515,7 @@ function adminCard(u){
     ${details.school ? `<div class="admin-user-info">🏫 ${details.school}</div>` : ''}
     ${details.field ? `<div class="admin-user-info">📚 ${details.field} — ${details.level || ''}</div>` : ''}
     ${details.role ? `<div class="admin-user-info">🚪 Porte : ${details.role}</div>` : ''}
+    ${details.poste ? `<div class="admin-user-info">🏅 Poste : ${details.poste === 'bureau' ? 'Membre de bureau' : 'Membre'}</div>` : ''}
     ${details.promotion ? `<div class="admin-user-info">🎓 Promo : ${details.promotion}</div>` : ''}
     ${cinImgs}
     ${actions}
