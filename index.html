@@ -162,6 +162,10 @@ header.hide-on-scroll{
 .profile-menu-logout:hover{background:rgba(224,51,77,0.08);}
 .profile-menu-logout:active{transform:scale(0.97);}
 
+.profile-menu-member-nav{border-top:1px solid var(--border-color);margin-top:10px;padding-top:10px;}
+.profile-menu-member-nav a{display:flex;align-items:center;gap:8px;padding:9px 8px;border-radius:10px;color:#003087;font-size:13px;font-weight:600;text-decoration:none;transition:0.15s;}
+.profile-menu-member-nav a:hover{background:#f0f4f8;}
+
 .profile-menu-nav{
   display:flex;flex-direction:column;gap:2px;margin-bottom:12px;
 }
@@ -638,6 +642,11 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
         <a href="#apropos" onclick="closeProfileMenu()">ℹ️ À propos</a>
         <a href="#contact" onclick="closeProfileMenu()">📞 Contact</a>
+      </div>
+      <div class="profile-menu-member-nav" id="memberNavLinks" style="display:none;">
+        <div style="font-size:11px;color:#aaa;margin:10px 0 6px;font-weight:700;letter-spacing:0.5px;">ESPACE MEMBRE</div>
+        <a href="#" onclick="openMemberDashboard();closeProfileMenu();return false;">📰 Actualités</a>
+        <a href="#" onclick="openMessaging();closeProfileMenu();return false;">💬 Messagerie groupes</a>
       </div>
       <button class="profile-menu-logout" onclick="logoutProfile()">Se déconnecter</button>
     </div>
@@ -1408,6 +1417,8 @@ function updateAccountUI(){
       if(textEl) textEl.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
       if(iconEl) iconEl.textContent = '✅';
       if(dot) dot.style.background = '#2ecc71';
+      const mnl = document.getElementById('memberNavLinks');
+      if(mnl) mnl.style.display = '';
     } else {
       if(nameEl) nameEl.textContent = fullName || 'Mon compte';
       if(textEl) textEl.textContent = 'Votre compte est actif. Rejoignez la communauté pour devenir membre.';
@@ -1424,6 +1435,8 @@ function updateAccountUI(){
     if(hamburger) hamburger.style.display = '';
     if(profileWrap) profileWrap.style.display = 'none';
     if(memberBanner) memberBanner.style.display = 'none';
+    const mnl = document.getElementById('memberNavLinks');
+    if(mnl) mnl.style.display = 'none';
     closeProfileMenu();
   }
 }
@@ -1696,6 +1709,415 @@ function closeRegionPage(){
     </div>
   </div>
 </div>
+
+<!-- ========== PANNEAU ACTUALITÉS MEMBRE ========== -->
+<style>
+#memberDashOverlay{
+  position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:3500;
+  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;
+}
+#memberDashOverlay.show{display:flex;}
+#memberDash{
+  background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:390px;
+  margin-top:60px;padding:0 0 32px;min-height:80vh;
+  box-shadow:0 -4px 30px rgba(0,0,0,0.18);
+}
+.mdash-header{
+  background:linear-gradient(135deg,#003087,#0070ba);
+  border-radius:20px 20px 0 0;padding:20px 20px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.mdash-title{color:#fff;font-size:18px;font-weight:800;}
+.mdash-close{background:rgba(255,255,255,0.15);border:none;color:#fff;
+  width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;}
+.mdash-welcome{
+  padding:16px 20px 0;background:#f5f8fb;
+  border-bottom:1px solid #e8eef5;
+}
+.mdash-welcome-name{font-size:15px;font-weight:700;color:#003087;}
+.mdash-welcome-sub{font-size:12px;color:#777;margin-top:2px;margin-bottom:12px;}
+.mdash-section-title{
+  font-size:12px;font-weight:800;color:#0070ba;letter-spacing:0.6px;
+  text-transform:uppercase;padding:16px 20px 8px;
+}
+.actu-card{
+  margin:0 16px 12px;background:#fff;border-radius:14px;
+  border:1px solid #e8eef5;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.actu-tag{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;
+}
+.actu-tag.info{background:#e3f0ff;color:#0070ba;}
+.actu-tag.event{background:#fff0e3;color:#e07b00;}
+.actu-tag.urgent{background:#ffeaea;color:#e0334d;}
+.actu-body{padding:12px 16px;}
+.actu-title-text{font-size:14px;font-weight:700;color:#003087;margin:6px 0 4px;}
+.actu-text{font-size:12px;color:#555;line-height:1.6;}
+.actu-date{font-size:11px;color:#aaa;margin-top:6px;}
+.actu-pin{font-size:10px;background:#f0f0f0;color:#888;padding:2px 8px;border-radius:20px;}
+/* Compose post (admin only via flag) */
+.actu-compose{margin:0 16px 12px;background:#f5f8fb;border-radius:14px;border:1px solid #e8eef5;padding:14px;}
+.actu-compose textarea{width:100%;border:1.5px solid #e8eef5;border-radius:10px;padding:10px;font-size:13px;resize:none;font-family:inherit;box-sizing:border-box;}
+.actu-compose-row{display:flex;gap:8px;margin-top:8px;align-items:center;}
+.actu-tag-select{flex:1;padding:8px;border:1.5px solid #e8eef5;border-radius:10px;font-size:12px;}
+.actu-post-btn{padding:8px 16px;background:#0070ba;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;}
+</style>
+
+<div id="memberDashOverlay" onclick="closeMemberDashOnOverlay(event)">
+  <div id="memberDash">
+    <div class="mdash-header">
+      <span class="mdash-title">📰 Actualités ADENOM</span>
+      <button class="mdash-close" onclick="closeMemberDashboard()">✕</button>
+    </div>
+    <div class="mdash-welcome" id="dashWelcome">
+      <div class="mdash-welcome-name" id="dashName">Bonjour !</div>
+      <div class="mdash-welcome-sub">Voici les dernières nouvelles de la communauté.</div>
+    </div>
+
+    <!-- Composer (admin only) -->
+    <div id="adminActuCompose" style="display:none;">
+      <div class="mdash-section-title">✏️ Publier une actualité</div>
+      <div class="actu-compose">
+        <textarea id="actuInput" rows="3" placeholder="Écrire une actualité pour les membres..."></textarea>
+        <div class="actu-compose-row">
+          <select class="actu-tag-select" id="actuTag">
+            <option value="info">ℹ️ Info</option>
+            <option value="event">📅 Événement</option>
+            <option value="urgent">🚨 Urgent</option>
+          </select>
+          <input id="actuTitle" type="text" placeholder="Titre..." style="flex:2;padding:8px;border:1.5px solid #e8eef5;border-radius:10px;font-size:12px;">
+          <button class="actu-post-btn" onclick="postActu()">Publier</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mdash-section-title">🔔 Dernières nouvelles</div>
+    <div id="actuList"></div>
+  </div>
+</div>
+
+<!-- ========== MESSAGERIE GROUPES ========== -->
+<style>
+#msgOverlay{
+  position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:3500;
+  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;
+}
+#msgOverlay.show{display:flex;}
+#msgPanel{
+  background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:390px;
+  margin-top:60px;min-height:80vh;display:flex;flex-direction:column;
+  box-shadow:0 -4px 30px rgba(0,0,0,0.18);
+}
+.msg-header{
+  background:linear-gradient(135deg,#003087,#0070ba);
+  border-radius:20px 20px 0 0;padding:18px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.msg-header-title{color:#fff;font-size:17px;font-weight:800;}
+.msg-close{background:rgba(255,255,255,0.15);border:none;color:#fff;
+  width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;}
+
+/* Vue liste des groupes */
+#msgGroupList{flex:1;overflow-y:auto;}
+.msg-group-item{
+  display:flex;align-items:center;gap:14px;padding:14px 20px;
+  border-bottom:1px solid #f0f0f0;cursor:pointer;transition:0.15s;
+}
+.msg-group-item:hover{background:#f5f8fb;}
+.msg-group-avatar{
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.msg-group-info{flex:1;min-width:0;}
+.msg-group-name{font-size:14px;font-weight:700;color:#003087;}
+.msg-group-preview{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-group-badge{background:#0070ba;color:#fff;border-radius:50%;width:20px;height:20px;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* Vue chat d'un groupe */
+#msgChatView{flex:1;display:none;flex-direction:column;}
+.msg-chat-header{
+  padding:12px 16px;background:#f5f8fb;border-bottom:1px solid #e8eef5;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.msg-chat-back{background:none;border:none;font-size:22px;cursor:pointer;color:#0070ba;padding:0;}
+.msg-chat-name{font-size:15px;font-weight:700;color:#003087;}
+.msg-chat-sub{font-size:11px;color:#aaa;}
+.msg-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:50vh;}
+.msg-bubble-wrap{display:flex;align-items:flex-end;gap:8px;}
+.msg-bubble-wrap.mine{flex-direction:row-reverse;}
+.msg-avatar-sm{
+  width:28px;height:28px;border-radius:50%;background:#e8eef5;
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+}
+.msg-bubble{
+  max-width:72%;padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.5;
+  background:#f0f4f8;color:#222;border-bottom-left-radius:4px;
+}
+.msg-bubble.mine{background:#0070ba;color:#fff;border-bottom-right-radius:4px;border-bottom-left-radius:16px;}
+.msg-bubble-meta{font-size:10px;color:#aaa;margin-top:2px;text-align:right;}
+.msg-bubble.mine .msg-bubble-meta{color:rgba(255,255,255,0.65);}
+.msg-sender{font-size:10px;font-weight:700;color:#0070ba;margin-bottom:2px;}
+.msg-bubble.mine .msg-sender{display:none;}
+.msg-input-area{
+  display:flex;gap:8px;padding:12px 16px;border-top:1px solid #e8eef5;flex-shrink:0;
+  background:#fff;
+}
+.msg-input{
+  flex:1;border:1.5px solid #e8eef5;border-radius:20px;padding:10px 14px;
+  font-size:13px;outline:none;font-family:inherit;
+}
+.msg-input:focus{border-color:#0070ba;}
+.msg-send-btn{
+  width:40px;height:40px;background:#0070ba;color:#fff;border:none;
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:0.15s;
+}
+.msg-send-btn:active{transform:scale(0.9);}
+.msg-send-btn svg{width:18px;height:18px;}
+</style>
+
+<div id="msgOverlay" onclick="closeMsgOnOverlay(event)">
+  <div id="msgPanel">
+    <div class="msg-header">
+      <span class="msg-header-title" id="msgHeaderTitle">💬 Messagerie</span>
+      <button class="msg-close" onclick="closeMessaging()">✕</button>
+    </div>
+
+    <!-- Liste des groupes -->
+    <div id="msgGroupList"></div>
+
+    <!-- Vue chat -->
+    <div id="msgChatView">
+      <div class="msg-chat-header">
+        <button class="msg-chat-back" onclick="backToGroups()">‹</button>
+        <div>
+          <div class="msg-chat-name" id="chatGroupName"></div>
+          <div class="msg-chat-sub" id="chatGroupSub"></div>
+        </div>
+      </div>
+      <div class="msg-messages" id="chatMessages"></div>
+      <div class="msg-input-area">
+        <input class="msg-input" id="msgInput" type="text" placeholder="Écrire un message..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="msg-send-btn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ ACTUALITÉS ============
+const ACTU_KEY = 'adenom_actualities';
+let isAdminSession = false; // sera mis à true si admin connecté
+
+function loadActualities(){
+  try{
+    return JSON.parse(localStorage.getItem(ACTU_KEY) || '[]');
+  }catch(e){ return []; }
+}
+function saveActualities(list){
+  localStorage.setItem(ACTU_KEY, JSON.stringify(list));
+}
+
+// Données initiales si vide
+function initDefaultActu(){
+  const list = loadActualities();
+  if(list.length === 0){
+    const defaults = [
+      {id:1,tag:'event',title:'Assemblée Générale 2026',text:'L\'AG annuelle de l\'ADENOM se tiendra le 5 juillet 2026. La présence de tous les membres est vivement souhaitée. Lieu à confirmer par la suite.',date:'15 juin 2026',pin:true},
+      {id:2,tag:'info',title:'Cotisations 2025-2026',text:'Rappel : les cotisations pour l\'année académique 2025-2026 sont ouvertes. Contactez le bureau pour plus d\'informations sur les modalités de paiement.',date:'10 juin 2026',pin:false},
+      {id:3,tag:'urgent',title:'Aide aux examens',text:'Des sessions de révision en groupe sont organisées chaque samedi matin. Rejoignez le groupe "Révisions" dans la messagerie pour plus de détails.',date:'8 juin 2026',pin:false},
+    ];
+    saveActualities(defaults);
+  }
+}
+
+function renderActualities(){
+  initDefaultActu();
+  const list = loadActualities();
+  const el = document.getElementById('actuList');
+  if(!list.length){ el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;">Aucune actualité pour le moment.</p>'; return; }
+  el.innerHTML = list.map(a => `
+    <div class="actu-card">
+      <div class="actu-body">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span>
+          ${a.pin?'<span class="actu-pin">📌 Épinglé</span>':''}
+        </div>
+        <div class="actu-title-text">${a.title}</div>
+        <div class="actu-text">${a.text}</div>
+        <div class="actu-date">🕐 ${a.date}</div>
+        ${isAdminSession?`<button onclick="deleteActu(${a.id})" style="margin-top:8px;padding:4px 12px;font-size:11px;background:#ffeaea;color:#e0334d;border:none;border-radius:8px;cursor:pointer;">🗑 Supprimer</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function postActu(){
+  const text = document.getElementById('actuInput').value.trim();
+  const title = document.getElementById('actuTitle').value.trim();
+  const tag = document.getElementById('actuTag').value;
+  if(!text || !title){ alert('Remplissez le titre et le contenu.'); return; }
+  const list = loadActualities();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  list.unshift({id:Date.now(),tag,title,text,date:dateStr,pin:false});
+  saveActualities(list);
+  document.getElementById('actuInput').value='';
+  document.getElementById('actuTitle').value='';
+  renderActualities();
+}
+
+function deleteActu(id){
+  if(!confirm('Supprimer cette actualité ?')) return;
+  const list = loadActualities().filter(a=>a.id!==id);
+  saveActualities(list);
+  renderActualities();
+}
+
+function openMemberDashboard(){
+  if(!currentUser){ openAuthModal('login'); return; }
+  const dash = document.getElementById('memberDashOverlay');
+  dash.classList.add('show');
+  document.body.style.overflow='hidden';
+  // Nom
+  const fullName = `${currentUser.firstName||''} ${currentUser.lastName||''}`.trim();
+  document.getElementById('dashName').textContent = `Bonjour, ${fullName} 👋`;
+  // Admin compose visible si adminCode défini
+  document.getElementById('adminActuCompose').style.display = (typeof adminCode !== 'undefined' && adminCode) ? '' : 'none';
+  isAdminSession = (typeof adminCode !== 'undefined' && !!adminCode);
+  renderActualities();
+}
+function closeMemberDashboard(){
+  document.getElementById('memberDashOverlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+function closeMemberDashOnOverlay(e){
+  if(e.target===document.getElementById('memberDashOverlay')) closeMemberDashboard();
+}
+
+// ============ MESSAGERIE GROUPES ============
+const MSG_KEY_PREFIX = 'adenom_msg_';
+const GROUPS = [
+  {id:'general',name:'🏠 Général',desc:'Discussion générale pour tous les membres',color:'#0070ba',bg:'#e3f0ff'},
+  {id:'revision',name:'📚 Révisions',desc:'Entraide et partage de cours',color:'#28a745',bg:'#e8f5e9'},
+  {id:'evenements',name:'📅 Événements',desc:'Organisation et info sur les événements',color:'#e07b00',bg:'#fff3e0'},
+  {id:'annonces',name:'📢 Annonces',desc:'Annonces officielles du bureau ADENOM',color:'#6f42c1',bg:'#f3e8ff'},
+  {id:'loisirs',name:'🎉 Loisirs',desc:'Sorties, sports, détente',color:'#e0334d',bg:'#ffeaea'},
+];
+
+let currentGroup = null;
+
+function loadGroupMessages(gid){
+  try{ return JSON.parse(localStorage.getItem(MSG_KEY_PREFIX+gid)||'[]'); }
+  catch(e){ return []; }
+}
+function saveGroupMessages(gid, msgs){
+  localStorage.setItem(MSG_KEY_PREFIX+gid, JSON.stringify(msgs));
+}
+
+function renderGroupList(){
+  const el = document.getElementById('msgGroupList');
+  el.innerHTML = GROUPS.map(g => {
+    const msgs = loadGroupMessages(g.id);
+    const last = msgs.length ? msgs[msgs.length-1] : null;
+    const preview = last ? `${last.senderName}: ${last.text.substring(0,40)}${last.text.length>40?'…':''}` : 'Aucun message';
+    return `<div class="msg-group-item" onclick="openGroup('${g.id}')">
+      <div class="msg-group-avatar" style="background:${g.bg};color:${g.color};">${g.name.split(' ')[0]}</div>
+      <div class="msg-group-info">
+        <div class="msg-group-name">${g.name}</div>
+        <div class="msg-group-preview">${preview}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openGroup(gid){
+  currentGroup = GROUPS.find(g=>g.id===gid);
+  if(!currentGroup) return;
+  document.getElementById('chatGroupName').textContent = currentGroup.name;
+  document.getElementById('chatGroupSub').textContent = currentGroup.desc;
+  document.getElementById('msgGroupList').style.display = 'none';
+  const cv = document.getElementById('msgChatView');
+  cv.style.display='flex';
+  document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
+  renderChatMessages();
+  // Init messages si vide pour général
+  if(gid==='general' && loadGroupMessages('general').length===0){
+    const msgs = [{id:1,senderId:'system',senderName:'Système',text:'Bienvenue dans le groupe Général ! Ici tous les membres peuvent échanger librement.',time:'Aujourd\'hui'}];
+    saveGroupMessages('general',msgs);
+    renderChatMessages();
+  }
+}
+
+function backToGroups(){
+  currentGroup = null;
+  document.getElementById('msgGroupList').style.display='';
+  document.getElementById('msgChatView').style.display='none';
+  document.getElementById('msgHeaderTitle').textContent='💬 Messagerie';
+  renderGroupList();
+}
+
+function renderChatMessages(){
+  if(!currentGroup) return;
+  const msgs = loadGroupMessages(currentGroup.id);
+  const el = document.getElementById('chatMessages');
+  const myId = currentUser ? (currentUser.id||currentUser.email) : 'me';
+  el.innerHTML = msgs.length ? msgs.map(m => {
+    const isMe = m.senderId === myId;
+    return `<div class="msg-bubble-wrap${isMe?' mine':''}">
+      ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
+      <div>
+        ${!isMe?`<div class="msg-sender">${m.senderName}</div>`:''}
+        <div class="msg-bubble${isMe?' mine':''}">${m.text}<div class="msg-bubble-meta">${m.time}</div></div>
+      </div>
+    </div>`;
+  }).join('') : '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
+  el.scrollTop = el.scrollHeight;
+}
+
+function sendMsg(){
+  if(!currentUser || !currentGroup) return;
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const msgs = loadGroupMessages(currentGroup.id);
+  const myId = currentUser.id || currentUser.email;
+  const fullName = `${currentUser.firstName||''} ${currentUser.lastName||''}`.trim() || 'Membre';
+  const now = new Date();
+  const time = now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  msgs.push({id:Date.now(),senderId:myId,senderName:fullName,text,time});
+  saveGroupMessages(currentGroup.id, msgs);
+  input.value='';
+  renderChatMessages();
+}
+
+function openMessaging(){
+  if(!currentUser){ openAuthModal('login'); return; }
+  if(currentUser.accountStatus !== 'member'){
+    alert('La messagerie est réservée aux membres validés.');
+    return;
+  }
+  document.getElementById('msgOverlay').classList.add('show');
+  document.body.style.overflow='hidden';
+  renderGroupList();
+}
+function closeMessaging(){
+  document.getElementById('msgOverlay').classList.remove('show');
+  document.body.style.overflow='';
+  backToGroups();
+}
+function closeMsgOnOverlay(e){
+  if(e.target===document.getElementById('msgOverlay')) closeMessaging();
+}
+</script>
 
 <!-- Lightbox CIN -->
 <div id="cinLightbox" onclick="this.classList.remove('show')">
