@@ -1189,11 +1189,11 @@ async function handleAuthSubmit(e, type){
       emailVerifPollingInterval = setInterval(async () => {
         try {
           const me = await apiRequest('/api/me');
-          if(me && me.emailVerified !== false){
+          if(me && me.user && me.user.emailVerified === true){
             clearInterval(emailVerifPollingInterval);
             emailVerifPollingInterval = null;
             waitingEmailVerification = false;
-            currentUser = me;
+            currentUser = me.user;
             updateAccountUI();
             document.getElementById('authSuccessTitle').textContent = '✅ Email confirmé !';
             document.getElementById('authSuccessText').textContent = 'Votre compte est activé. Bienvenue !';
