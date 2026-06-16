@@ -410,10 +410,11 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
   position:fixed;top:0;left:0;width:100%;height:100%;
   background:var(--bg-section-light);z-index:1000;
   overflow-y:auto;
-  display:none;
-  opacity:0;transition:opacity 0.3s ease;
+  opacity:0;pointer-events:none;
+  transform:scale(0.97) translateY(12px);
+  transition:opacity 0.35s ease, transform 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
 }
-.region-page.active{display:block;opacity:1;}
+.region-page.active{opacity:1;pointer-events:auto;transform:scale(1) translateY(0);}
 
 .region-page-hero{
   position:relative;width:100%;height:50vh;min-height:320px;
@@ -1587,14 +1588,20 @@ function openRegionModal(key, cardEl){
   document.getElementById('regionPageBody').innerHTML = data.html;
 
   const page = document.getElementById('regionPage');
-  page.classList.add('active');
   page.scrollTop = 0;
   document.body.style.overflow = 'hidden';
+  // Léger délai pour que la transition soit visible
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      page.classList.add('active');
+    });
+  });
 }
 
 function closeRegionPage(){
-  document.getElementById('regionPage').classList.remove('active');
-  document.body.style.overflow = '';
+  const page = document.getElementById('regionPage');
+  page.classList.remove('active');
+  setTimeout(() => { document.body.style.overflow = ''; }, 350);
 }
 
 </script>
