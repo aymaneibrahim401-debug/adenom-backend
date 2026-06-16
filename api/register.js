@@ -8,10 +8,7 @@ const {
   handlePreflight,
   normalizeEmail,
   isValidEmail,
-  sanitizeUser,
-  setSessionCookie,
   getBody,
-  SESSION_DURATION_MS
 } = require('../lib/http');
 
 module.exports = async (req, res) => {
@@ -64,11 +61,7 @@ module.exports = async (req, res) => {
 
     await db.createUser(user);
 
-    const token = generateToken();
-    const expiresAt = Date.now() + SESSION_DURATION_MS;
-    await db.createSession({ token, userId: user.id, createdAt: now, expiresAt });
-
-    // Envoi de l'email de confirmation (ne bloque pas l'inscription en cas d'échec)
+    // Envoi de l'email de confirmation
     try {
       const verifyToken = generateToken();
       const verifyExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24h
@@ -83,8 +76,8 @@ module.exports = async (req, res) => {
       console.error("Échec de l'envoi de l'email de vérification:", emailErr);
     }
 
-    setSessionCookie(res, token, SESSION_DURATION_MS);
-    return res.status(201).json({ user: sanitizeUser(user) });
+    // Pas de session créée : le compte s'ouvre seulement après confirmation email
+    return res.status(201).json({ emailSent: true });
   } catch (err) {
     console.error('Erreur /api/register:', err);
     return res.status(500).json({ error: 'Erreur interne du serveur.' });

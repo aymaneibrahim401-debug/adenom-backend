@@ -37,6 +37,14 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
     }
 
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        error: 'Veuillez confirmer votre adresse e-mail avant de vous connecter. Vérifiez votre boîte de réception (et vos spams).',
+        emailNotVerified: true,
+        email: user.email
+      });
+    }
+
     const token = generateToken();
     const now = new Date().toISOString();
     const expiresAt = Date.now() + SESSION_DURATION_MS;

@@ -1021,6 +1021,7 @@ async function apiRequest(path, options = {}){
     const err = new Error(data.error || 'Une erreur est survenue.');
     err.status = res.status;
     err.data = data;
+    if(data.emailNotVerified) err.emailNotVerified = true;
     throw err;
   }
   return data;
@@ -1029,7 +1030,7 @@ async function apiRequest(path, options = {}){
 function showFieldError(id, message){
   const el = document.getElementById(id);
   if(!el) return;
-  el.textContent = message;
+  el.innerHTML = message;
   el.style.display = 'block';
 }
 function hideFieldError(id){
@@ -1087,7 +1088,12 @@ async function handleAuthSubmit(e, type){
       setTimeout(closeAuthModal, 1600);
       updateAccountUI();
     }catch(err){
-      showFieldError('loginGlobalError', err.message);
+      // Cas particulier : email non confirmé → proposer de renvoyer le lien
+      if(err.status === 403 && err.emailNotVerified){
+        showFieldError('loginGlobalError', err.message + ' <a href="#" onclick="return resendFromLogin(event, \'' + email + '\')">Renvoyer le lien</a>');
+      } else {
+        showFieldError('loginGlobalError', err.message);
+      }
     }finally{
       setSubmitLoading('loginSubmitBtn', false, 'Se connecter');
     }
@@ -1124,24 +1130,16 @@ async function handleAuthSubmit(e, type){
 
     setSubmitLoading('signupSubmitBtn', true, 'Inscription');
     try{
-      const { user } = await apiRequest('/api/register', {
+      await apiRequest('/api/register', {
         method:'POST',
         body:{ firstName, lastName, email, password, birthDate, gender }
       });
-      currentUser = user;
 
-      // Si on est dans le flux "Rejoindre la communauté", on enchaîne
-      // directement sur le formulaire d'adhésion.
-      if(authFlow === 'join'){
-        switchAuthPanel('join');
-        return false;
-      }
-
-      document.getElementById('authSuccessTitle').textContent = 'Compte créé !';
-      document.getElementById('authSuccessText').textContent = `Bienvenue, ${user.firstName} ! Un email de confirmation vous a été envoyé, pensez à vérifier votre boîte de réception.`;
+      // Le compte n'est pas ouvert : l'utilisateur doit confirmer son email
+      document.getElementById('authSuccessTitle').textContent = '📧 Vérifiez votre email !';
+      document.getElementById('authSuccessText').textContent = `Un lien de confirmation a été envoyé à ${email}. Cliquez dessus pour activer votre compte. Pensez à vérifier vos spams.`;
       switchAuthPanel('success');
-      setTimeout(closeAuthModal, 1800);
-      updateAccountUI();
+      // Pas de closeAuthModal automatique : l'utilisateur doit lire le message
     }catch(err){
       showFieldError('signupGlobalError', err.message);
     }finally{
@@ -1366,6 +1364,19 @@ async function resendVerificationEmail(e){
   }catch(err){
     link.textContent = "Erreur, réessayez";
     setTimeout(() => { link.textContent = original; }, 4000);
+  }
+  return false;
+}
+
+async function resendFromLogin(e, email){
+  e.preventDefault();
+  const link = e.target;
+  link.textContent = 'Envoi...';
+  try{
+    await apiRequest('/api/resend-verification-by-email', { method:'POST', body:{ email } });
+    link.textContent = 'Email envoyé ! Vérifiez votre boîte.';
+  }catch(err){
+    link.textContent = 'Erreur, réessayez';
   }
   return false;
 }
