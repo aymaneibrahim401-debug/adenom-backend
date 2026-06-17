@@ -2291,9 +2291,9 @@ function renderChatMessages(msgs){
     el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
     return;
   }
-  const myId = myUserId || (currentUser ? String(currentUser.id) : '');
+  const myName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : '';
   el.innerHTML = msgs.map(m => {
-    const isMe = myId.length > 0 && String(m.userId) === myId;
+    const isMe = myName.length > 0 && m.senderName.trim() === myName;
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
       ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
