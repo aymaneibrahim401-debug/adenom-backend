@@ -2290,26 +2290,36 @@ async function renderGroupList(){
 }
 
 async function openGroup(gid){
+  // Stopper l'ancien poll tout de suite
+  stopMsgPoll();
+
   currentGroup = cachedGroups.find(g=>g.id===gid);
   if(!currentGroup) return;
+
+  // Vider immédiatement l'écran
+  _lastMsgId = null;
+  _cachedMsgs = [];
+  const chatEl = document.getElementById('chatMessages');
+  if(chatEl) chatEl.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Chargement...</p>';
+  const typingEl = document.getElementById('typingIndicator');
+  if(typingEl){ typingEl.style.display='none'; typingEl.innerHTML=''; }
+
   // S'assurer que currentUser est bien chargé
-  if(!currentUser){
+  if(!currentUser || !currentUser.id){
     try{
       const data = await apiRequest('/api/me');
       if(data && data.user) currentUser = data.user;
     }catch(e){}
   }
   myUserId = currentUser ? String(currentUser.id) : '';
-  _lastMsgId = null;
-  _cachedMsgs = [];
+
   document.getElementById('chatGroupName').textContent = currentGroup.name;
   document.getElementById('chatGroupSub').textContent = currentGroup.desc;
   document.getElementById('msgGroupList').style.display = 'none';
-  const cv = document.getElementById('msgChatView');
-  cv.style.display = 'flex';
+  document.getElementById('msgChatView').style.display = 'flex';
   document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
+
   await pollGroupData();
-  stopMsgPoll();
   msgPollInterval = setInterval(pollGroupData, 800);
 }
 
@@ -2327,10 +2337,14 @@ function stopMsgPoll(){
 }
 
 let _lastMsgId = null;
+let _pollingGroupId = null;
 async function pollGroupData(){
   if(!currentGroup) return;
+  const groupIdAtStart = currentGroup.id;
   try{
     const data = await apiRequest('/api/messages?action=poll&group=' + currentGroup.id);
+    // Si le groupe a changé pendant la requête, ignorer le résultat
+    if(!currentGroup || currentGroup.id !== groupIdAtStart) return;
     const msgs = data.messages || [];
     const typing = data.typing || [];
 
