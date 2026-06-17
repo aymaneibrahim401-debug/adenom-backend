@@ -2167,47 +2167,29 @@ function closeRegionPage(){
 const ACTU_KEY = 'adenom_actualities';
 let isAdminSession = false; // sera mis à true si admin connecté
 
-function loadActualities(){
-  try{
-    return JSON.parse(localStorage.getItem(ACTU_KEY) || '[]');
-  }catch(e){ return []; }
-}
-function saveActualities(list){
-  localStorage.setItem(ACTU_KEY, JSON.stringify(list));
-}
-
-// Données initiales si vide
-function initDefaultActu(){
-  const list = loadActualities();
-  if(list.length === 0){
-    const defaults = [
-      {id:1,tag:'event',title:'Assemblée Générale 2026',text:'L\'AG annuelle de l\'ADENOM se tiendra le 5 juillet 2026. La présence de tous les membres est vivement souhaitée. Lieu à confirmer par la suite.',date:'15 juin 2026',pin:true},
-      {id:2,tag:'info',title:'Cotisations 2025-2026',text:'Rappel : les cotisations pour l\'année académique 2025-2026 sont ouvertes. Contactez le bureau pour plus d\'informations sur les modalités de paiement.',date:'10 juin 2026',pin:false},
-      {id:3,tag:'urgent',title:'Aide aux examens',text:'Des sessions de révision en groupe sont organisées chaque samedi matin. Rejoignez le groupe "Révisions" dans la messagerie pour plus de détails.',date:'8 juin 2026',pin:false},
-    ];
-    saveActualities(defaults);
-  }
-}
-
-function renderActualities(){
-  initDefaultActu();
-  const list = loadActualities();
+// ============ ACTUALITÉS — BASE DE DONNÉES ============
+async function renderActualities(){
   const el = document.getElementById('actuList');
-  if(!list.length){ el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;">Aucune actualité pour le moment.</p>'; return; }
-  el.innerHTML = list.map(a => `
-    <div class="actu-card">
-      ${a.image ? `<img src="${a.image}" alt="" style="width:100%;border-radius:10px 10px 0 0;max-height:200px;object-fit:cover;display:block;">` : ''}
-      <div class="actu-body">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+  el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;">Chargement...</p>';
+  try{
+    const data = await apiRequest('/api/messages?action=actu-list');
+    const list = data.actualities || [];
+    if(!list.length){ el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;">Aucune actualité pour le moment.</p>'; return; }
+    el.innerHTML = list.map(a => {
+      const date = new Date(a.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+      return `<div class="actu-card">
+        ${a.image ? `<img src="${a.image}" alt="" style="width:100%;border-radius:10px 10px 0 0;max-height:200px;object-fit:cover;display:block;">` : ''}
+        <div class="actu-body">
           <span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span>
-          ${a.pin?'<span class="actu-pin">📌 Épinglé</span>':''}
+          ${a.title?`<div class="actu-title-text">${a.title}</div>`:''}
+          ${a.text?`<div class="actu-text">${a.text}</div>`:''}
+          <div class="actu-date">🕐 ${date}</div>
         </div>
-        ${a.title?`<div class="actu-title-text">${a.title}</div>`:''}
-        ${a.text?`<div class="actu-text">${a.text}</div>`:''}
-        <div class="actu-date">🕐 ${a.date}</div>
-      </div>
-    </div>
-  `).join('');
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<p style="text-align:center;color:#e0334d;padding:24px;">Erreur de chargement.</p>';
+  }
 }
 
 function postActu(){
@@ -2492,52 +2474,60 @@ function removeAdminImg(){
   document.getElementById('adminImgInput').value = '';
 }
 
-function adminPostActu(){
+async function adminPostActu(){
   const title = document.getElementById('adminActuTitle').value.trim();
   const text = document.getElementById('adminActuText').value.trim();
   const tag = document.getElementById('adminActuTag').value;
   if(!title && !text){ alert('Ajoutez un titre ou un texte.'); return; }
-  const list = loadActualities();
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-  list.unshift({
-    id: Date.now(), tag, title: title||'', text: text||'',
-    date: dateStr, pin: false,
-    image: adminImgData || null
-  });
-  saveActualities(list);
-  // Reset
-  document.getElementById('adminActuTitle').value = '';
-  document.getElementById('adminActuText').value = '';
-  removeAdminImg();
-  renderAdminActuList();
+  try{
+    await fetch('/api/messages?action=actu-post', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-admin-code': adminCode},
+      body: JSON.stringify({ tag, title, text, image: adminImgData||null })
+    });
+    document.getElementById('adminActuTitle').value = '';
+    document.getElementById('adminActuText').value = '';
+    removeAdminImg();
+    await renderAdminActuList();
+  }catch(e){ alert('Erreur lors de la publication.'); }
 }
 
-function renderAdminActuList(){
-  const list = loadActualities();
+async function renderAdminActuList(){
   const el = document.getElementById('adminActuList');
-  if(!list.length){ el.innerHTML='<div class="admin-empty">Aucune publication</div>'; return; }
-  el.innerHTML = list.map(a => `
-    <div class="admin-actu-card">
-      ${a.image ? `<img src="${a.image}" alt="">` : ''}
-      <div class="admin-actu-card-body">
-        <div style="margin-bottom:4px;"><span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span></div>
-        ${a.title ? `<div class="admin-actu-card-title">${a.title}</div>` : ''}
-        ${a.text ? `<div class="admin-actu-card-text">${a.text}</div>` : ''}
-        <div class="admin-actu-card-footer">
-          <span class="admin-actu-card-date">🕐 ${a.date}</span>
-          <button class="admin-actu-delete" onclick="adminDeleteActu(${a.id})">🗑 Supprimer</button>
+  el.innerHTML = '<div class="admin-empty">Chargement...</div>';
+  try{
+    const res = await fetch('/api/messages?action=actu-list', {
+      headers:{'x-admin-code': adminCode}
+    });
+    const data = await res.json();
+    const list = data.actualities || [];
+    if(!list.length){ el.innerHTML='<div class="admin-empty">Aucune publication</div>'; return; }
+    el.innerHTML = list.map(a => {
+      const date = new Date(a.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+      return `<div class="admin-actu-card">
+        ${a.image ? `<img src="${a.image}" alt="">` : ''}
+        <div class="admin-actu-card-body">
+          <div style="margin-bottom:4px;"><span class="actu-tag ${a.tag}">${a.tag==='info'?'ℹ️ Info':a.tag==='event'?'📅 Événement':'🚨 Urgent'}</span></div>
+          ${a.title ? `<div class="admin-actu-card-title">${a.title}</div>` : ''}
+          ${a.text ? `<div class="admin-actu-card-text">${a.text}</div>` : ''}
+          <div class="admin-actu-card-footer">
+            <span class="admin-actu-card-date">🕐 ${date}</span>
+            <button class="admin-actu-delete" onclick="adminDeleteActu('${a.id}')">🗑 Supprimer</button>
+          </div>
         </div>
-      </div>
-    </div>
-  `).join('');
+      </div>`;
+    }).join('');
+  }catch(e){ el.innerHTML='<div class="admin-empty">Erreur</div>'; }
 }
 
-function adminDeleteActu(id){
+async function adminDeleteActu(id){
   if(!confirm('Supprimer cette publication ?')) return;
-  saveActualities(loadActualities().filter(a=>a.id!==id));
-  renderAdminActuList();
-  renderActualities();
+  await fetch('/api/messages?action=actu-delete', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-admin-code': adminCode},
+    body: JSON.stringify({ id })
+  });
+  await renderAdminActuList();
 }
 
 // Ouvrir le panel admin via triple tap sur le footer logo

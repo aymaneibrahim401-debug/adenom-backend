@@ -101,6 +101,38 @@ module.exports = async (req, res) => {
       return res.status(200).json({ typing: active });
     }
 
+    // ---- ACTUALITIES LIST ----
+    if (action === 'actu-list' && req.method === 'GET') {
+      const actualities = await db.getActualities();
+      return res.status(200).json({ actualities });
+    }
+
+    // ---- ACTU POST (admin only) ----
+    if (action === 'actu-post' && req.method === 'POST') {
+      const { checkAdminCode } = require('../lib/http');
+      if (!checkAdminCode(req, req.body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      const body = req.body || {};
+      const { randomUUID } = require('crypto');
+      const a = {
+        id: randomUUID(),
+        tag: body.tag || 'info',
+        title: (body.title || '').slice(0, 200),
+        text: (body.text || '').slice(0, 5000),
+        image: body.image || null,
+        createdAt: new Date().toISOString()
+      };
+      await db.createActuality(a);
+      return res.status(200).json({ actuality: a });
+    }
+
+    // ---- ACTU DELETE (admin only) ----
+    if (action === 'actu-delete' && req.method === 'POST') {
+      const { checkAdminCode } = require('../lib/http');
+      if (!checkAdminCode(req, req.body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      await db.deleteActuality(req.body.id);
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'Action inconnue.' });
 
   } catch (err) {
