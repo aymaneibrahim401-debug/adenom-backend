@@ -2290,9 +2290,9 @@ function renderChatMessages(msgs){
     el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
     return;
   }
-  const myId = currentUser ? currentUser.id : '';
+  const myId = currentUser ? String(currentUser.id) : '';
   el.innerHTML = msgs.map(m => {
-    const isMe = m.userId === myId;
+    const isMe = myId && String(m.userId) === myId;
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
       ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
