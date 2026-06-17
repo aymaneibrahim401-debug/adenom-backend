@@ -2425,6 +2425,8 @@ function getAvatarHtml(senderName){
   const initials = senderName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
   return `<div class="msg-avatar-sm" style="background:#0070ba;color:#fff;font-size:11px;font-weight:700;">${initials}</div>`;
 }
+
+async function sendMsg(){
   if(!currentUser || !currentGroup) return;
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
