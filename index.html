@@ -2301,12 +2301,9 @@ async function openGroup(gid){
   const cv = document.getElementById('msgChatView');
   cv.style.display = 'flex';
   document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
-  await loadAndRenderMessages();
+  await pollGroupData();
   stopMsgPoll();
-  msgPollInterval = setInterval(async () => {
-    await loadAndRenderMessages();
-    await checkTyping();
-  }, 1500);
+  msgPollInterval = setInterval(pollGroupData, 800);
 }
 
 function backToGroups(){
@@ -2323,18 +2320,44 @@ function stopMsgPoll(){
 }
 
 let _lastMsgId = null;
-async function loadAndRenderMessages(){
+async function pollGroupData(){
   if(!currentGroup) return;
   try{
-    const data = await apiRequest('/api/messages?action=list&group=' + currentGroup.id);
+    const data = await apiRequest('/api/messages?action=poll&group=' + currentGroup.id);
     const msgs = data.messages || [];
+    const typing = data.typing || [];
+
+    // Messages
     const lastId = msgs.length ? msgs[msgs.length-1].id : null;
     if(lastId !== _lastMsgId){
       _lastMsgId = lastId;
       _cachedMsgs = msgs;
       renderChatMessages(msgs);
     }
-  }catch(e){ console.error(e); }
+
+    // Typing
+    const el = document.getElementById('typingIndicator');
+    if(typing.length){
+      el.style.display = '';
+      el.innerHTML = `<div class="typing-wrap">
+        <div class="msg-avatar-sm" style="background:#0070ba;color:#fff;font-size:11px;font-weight:700;">${typing[0].split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+        <div>
+          <div class="typing-name">${typing.join(', ')} écrit...</div>
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      el.style.display = 'none';
+    }
+  }catch(e){}
+}
+
+async function loadAndRenderMessages(){
+  await pollGroupData();
 }
 
 function renderChatMessages(msgs){
@@ -2343,9 +2366,11 @@ function renderChatMessages(msgs){
     el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
     return;
   }
+  // Double vérification : userId ET nom
+  const myId = myUserId || (currentUser ? String(currentUser.id) : '');
   const myName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : '';
   el.innerHTML = msgs.map(m => {
-    const isMe = myName.length > 0 && m.senderName.trim() === myName;
+    const isMe = (myId && String(m.userId) === myId) || (myName && m.senderName.trim() === myName);
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
       ${!isMe ? getAvatarHtml(m.senderName) : ''}

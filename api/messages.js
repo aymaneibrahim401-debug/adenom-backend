@@ -79,13 +79,7 @@ module.exports = async (req, res) => {
       const body = req.body || {};
       const groupId = body.groupId;
       if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      // Stocker en mémoire (reset après 4s côté client)
-      if (!global._typing) global._typing = {};
-      if (!global._typing[groupId]) global._typing[groupId] = {};
-      global._typing[groupId][user.id] = {
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        at: Date.now()
-      };
+      await db.setTyping(user.id, groupId, `${user.firstName} ${user.lastName}`.trim());
       return res.status(200).json({ ok: true });
     }
 
@@ -93,12 +87,19 @@ module.exports = async (req, res) => {
     if (action === 'typing-list' && req.method === 'GET') {
       const groupId = req.query.group;
       if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      if (!global._typing) global._typing = {};
-      const now = Date.now();
-      const active = Object.entries(global._typing[groupId] || {})
-        .filter(([uid, v]) => uid !== user.id && now - v.at < 4000)
-        .map(([, v]) => v.name);
-      return res.status(200).json({ typing: active });
+      const names = await db.getTyping(groupId, user.id);
+      return res.status(200).json({ typing: names });
+    }
+
+    // ---- POLL COMBINÉ (messages + typing en 1 seule requête) ----
+    if (action === 'poll' && req.method === 'GET') {
+      const groupId = req.query.group;
+      if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
+      const [messages, typing] = await Promise.all([
+        db.getMessages(groupId, 80),
+        db.getTyping(groupId, user.id)
+      ]);
+      return res.status(200).json({ messages, typing });
     }
 
     // ---- ACTUALITIES LIST ----
