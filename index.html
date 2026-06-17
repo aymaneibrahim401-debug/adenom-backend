@@ -2195,7 +2195,8 @@ function closeMemberDashOnOverlay(e){
 let currentGroup = null;
 let msgPollInterval = null;
 let cachedGroups = [];
-
+let myUserId = '';
+let _lastMsgCount = 0;
 async function openMessaging(){
   if(!currentUser){ openAuthModal('login'); return; }
   if(currentUser.accountStatus !== 'member'){
@@ -2245,6 +2246,7 @@ async function renderGroupList(){
 async function openGroup(gid){
   currentGroup = cachedGroups.find(g=>g.id===gid);
   if(!currentGroup) return;
+  myUserId = currentUser ? String(currentUser.id) : '';
   document.getElementById('chatGroupName').textContent = currentGroup.name;
   document.getElementById('chatGroupSub').textContent = currentGroup.desc;
   document.getElementById('msgGroupList').style.display = 'none';
@@ -2270,7 +2272,6 @@ function stopMsgPoll(){
   if(msgPollInterval){ clearInterval(msgPollInterval); msgPollInterval = null; }
 }
 
-let _lastMsgCount = 0;
 async function loadAndRenderMessages(){
   if(!currentGroup) return;
   try{
@@ -2290,9 +2291,9 @@ function renderChatMessages(msgs){
     el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
     return;
   }
-  const myId = currentUser ? String(currentUser.id) : '';
+  const myId = myUserId || (currentUser ? String(currentUser.id) : '');
   el.innerHTML = msgs.map(m => {
-    const isMe = myId && String(m.userId) === myId;
+    const isMe = myId.length > 0 && String(m.userId) === myId;
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
       ${!isMe?`<div class="msg-avatar-sm">👤</div>`:''}
