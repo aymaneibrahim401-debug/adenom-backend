@@ -2,9 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/join.js": { "maxDuration": 30 },
-    "api/messages/list.js": { "maxDuration": 10 },
-    "api/messages/send.js": { "maxDuration": 10 },
-    "api/messages/groups.js": { "maxDuration": 10 }
+    "api/messages.js": { "maxDuration": 10 }
   },
   "headers": [
     {

@@ -2220,7 +2220,7 @@ async function renderGroupList(){
   const el = document.getElementById('msgGroupList');
   el.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;">Chargement...</div>';
   try{
-    const data = await apiRequest('/api/messages/groups');
+    const data = await apiRequest('/api/messages?action=groups');
     cachedGroups = data.groups || [];
     el.innerHTML = cachedGroups.map(g => {
       const preview = g.lastMessage
@@ -2272,7 +2272,7 @@ let _lastMsgCount = 0;
 async function loadAndRenderMessages(){
   if(!currentGroup) return;
   try{
-    const data = await apiRequest('/api/messages/list?group=' + currentGroup.id);
+    const data = await apiRequest('/api/messages?action=list&group=' + currentGroup.id);
     const msgs = data.messages || [];
     // Ne re-render que si nouveaux messages
     if(msgs.length !== _lastMsgCount){
@@ -2310,7 +2310,7 @@ async function sendMsg(){
   if(!text) return;
   input.value = '';
   try{
-    await apiRequest('/api/messages/send', {
+    await apiRequest('/api/messages?action=send', {
       method: 'POST',
       body: { groupId: currentGroup.id, text }
     });
