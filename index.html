@@ -2057,7 +2057,30 @@ function closeRegionPage(){
   width:30px;height:30px;border-radius:50%;background:#e0e8f0;
   display:flex;align-items:center;justify-content:center;
   font-size:14px;flex-shrink:0;align-self:flex-end;
+  overflow:hidden;
 }
+.msg-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+
+/* Indicateur typing */
+.typing-wrap{
+  display:flex;align-items:flex-end;gap:8px;
+  align-self:flex-start;margin-top:4px;
+}
+.typing-bubble{
+  background:#e8e8e8;border-radius:18px;border-bottom-left-radius:4px;
+  padding:10px 14px;display:flex;gap:4px;align-items:center;
+}
+.typing-dot{
+  width:7px;height:7px;border-radius:50%;background:#999;
+  animation:typingBounce 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typingBounce{
+  0%,60%,100%{transform:translateY(0);}
+  30%{transform:translateY(-6px);}
+}
+.typing-name{font-size:11px;color:#aaa;margin-top:2px;padding:0 4px;}
 /* Colonne texte */
 .msg-bubble-col{
   display:flex;flex-direction:column;
@@ -2128,8 +2151,9 @@ function closeRegionPage(){
         </div>
       </div>
       <div class="msg-messages" id="chatMessages"></div>
+      <div id="typingIndicator" style="display:none;padding:0 14px 6px;background:#fff;"></div>
       <div class="msg-input-area">
-        <textarea class="msg-input" id="msgInput" placeholder="Écrire un message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+        <textarea class="msg-input" id="msgInput" placeholder="Écrire un message..." rows="1" oninput="onMsgInput()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
         <button class="msg-send-btn" onclick="sendMsg()">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
@@ -2236,6 +2260,7 @@ let msgPollInterval = null;
 let cachedGroups = [];
 let myUserId = '';
 let _lastMsgCount = 0;
+let _cachedMsgs = [];
 async function openMessaging(){
   if(!currentUser){ openAuthModal('login'); return; }
   if(currentUser.accountStatus !== 'member'){
@@ -2286,6 +2311,8 @@ async function openGroup(gid){
   currentGroup = cachedGroups.find(g=>g.id===gid);
   if(!currentGroup) return;
   myUserId = currentUser ? String(currentUser.id) : '';
+  _lastMsgId = null;
+  _cachedMsgs = [];
   document.getElementById('chatGroupName').textContent = currentGroup.name;
   document.getElementById('chatGroupSub').textContent = currentGroup.desc;
   document.getElementById('msgGroupList').style.display = 'none';
@@ -2293,9 +2320,11 @@ async function openGroup(gid){
   cv.style.display = 'flex';
   document.getElementById('msgHeaderTitle').textContent = currentGroup.name;
   await loadAndRenderMessages();
-  // Polling toutes les 4s
   stopMsgPoll();
-  msgPollInterval = setInterval(loadAndRenderMessages, 4000);
+  msgPollInterval = setInterval(async () => {
+    await loadAndRenderMessages();
+    await checkTyping();
+  }, 1500);
 }
 
 function backToGroups(){
@@ -2311,14 +2340,16 @@ function stopMsgPoll(){
   if(msgPollInterval){ clearInterval(msgPollInterval); msgPollInterval = null; }
 }
 
+let _lastMsgId = null;
 async function loadAndRenderMessages(){
   if(!currentGroup) return;
   try{
     const data = await apiRequest('/api/messages?action=list&group=' + currentGroup.id);
     const msgs = data.messages || [];
-    // Ne re-render que si nouveaux messages
-    if(msgs.length !== _lastMsgCount){
-      _lastMsgCount = msgs.length;
+    const lastId = msgs.length ? msgs[msgs.length-1].id : null;
+    if(lastId !== _lastMsgId){
+      _lastMsgId = lastId;
+      _cachedMsgs = msgs;
       renderChatMessages(msgs);
     }
   }catch(e){ console.error(e); }
@@ -2335,7 +2366,7 @@ function renderChatMessages(msgs){
     const isMe = myName.length > 0 && m.senderName.trim() === myName;
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
-      ${!isMe ? `<div class="msg-avatar-sm">👤</div>` : ''}
+      ${!isMe ? getAvatarHtml(m.senderName) : ''}
       <div class="msg-bubble-col">
         ${!isMe ? `<div class="msg-sender">${m.senderName}</div>` : ''}
         <div class="msg-bubble${isMe?' mine':''}">${m.text}</div>
@@ -2346,12 +2377,70 @@ function renderChatMessages(msgs){
   el.scrollTop = el.scrollHeight;
 }
 
-async function sendMsg(){
+// ---- TYPING ----
+let _typingTimeout = null;
+
+function onMsgInput(){
+  if(!currentGroup || !currentUser) return;
+  // Envoyer signal typing
+  apiRequest('/api/messages?action=typing', {
+    method:'POST', body:{ groupId: currentGroup.id }
+  }).catch(()=>{});
+}
+
+async function checkTyping(){
+  if(!currentGroup) return;
+  try{
+    const data = await apiRequest('/api/messages?action=typing-list&group=' + currentGroup.id);
+    const names = data.typing || [];
+    const el = document.getElementById('typingIndicator');
+    if(names.length){
+      el.style.display = '';
+      el.innerHTML = `<div class="typing-wrap">
+        <div class="msg-avatar-sm">👤</div>
+        <div>
+          <div class="typing-name">${names.join(', ')} écrit...</div>
+          <div class="typing-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      el.style.display = 'none';
+      el.innerHTML = '';
+    }
+  }catch(e){}
+}
+
+// Photo profil dans les bulles
+function getAvatarHtml(senderName){
+  // Chercher si on a une photo en localStorage pour ce nom
+  if(currentUser && senderName === `${currentUser.firstName} ${currentUser.lastName}`.trim()){
+    const photo = localStorage.getItem('profilePhoto_' + currentUser.id);
+    if(photo) return `<div class="msg-avatar-sm"><img src="${photo}" alt=""></div>`;
+  }
+  // Initiales
+  const initials = senderName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  return `<div class="msg-avatar-sm" style="background:#0070ba;color:#fff;font-size:11px;font-weight:700;">${initials}</div>`;
+}
   if(!currentUser || !currentGroup) return;
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if(!text) return;
   input.value = '';
+
+  // Affichage immédiat (optimistic UI)
+  const tempMsg = {
+    id: 'temp_' + Date.now(),
+    userId: currentUser.id,
+    senderName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+    text, createdAt: new Date().toISOString()
+  };
+  _cachedMsgs = [...(_cachedMsgs||[]), tempMsg];
+  renderChatMessages(_cachedMsgs);
+
   try{
     await apiRequest('/api/messages?action=send', {
       method: 'POST',
@@ -2359,7 +2448,7 @@ async function sendMsg(){
     });
     await loadAndRenderMessages();
   }catch(e){
-    input.value = text; // remettre si erreur
+    input.value = text;
     alert('Erreur d\'envoi.');
   }
 }
