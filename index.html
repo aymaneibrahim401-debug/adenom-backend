@@ -1988,13 +1988,13 @@ function closeRegionPage(){
 <style>
 #msgOverlay{
   position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:3500;
-  display:none;align-items:flex-start;justify-content:center;overflow-y:auto;
+  display:none;align-items:flex-end;justify-content:center;
 }
 #msgOverlay.show{display:flex;}
 #msgPanel{
   background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:390px;
-  margin-top:60px;min-height:80vh;display:flex;flex-direction:column;
-  box-shadow:0 -4px 30px rgba(0,0,0,0.18);
+  height:88vh;max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 -4px 30px rgba(0,0,0,0.18);overflow:hidden;
 }
 .msg-header{
   background:linear-gradient(135deg,#003087,#0070ba);
@@ -2007,7 +2007,7 @@ function closeRegionPage(){
   display:flex;align-items:center;justify-content:center;}
 
 /* Vue liste des groupes */
-#msgGroupList{flex:1;overflow-y:auto;}
+#msgGroupList{flex:1;overflow-y:auto;min-height:0;}
 .msg-group-item{
   display:flex;align-items:center;gap:14px;padding:14px 20px;
   border-bottom:1px solid #f0f0f0;cursor:pointer;transition:0.15s;
@@ -2025,7 +2025,7 @@ function closeRegionPage(){
   font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
 /* Vue chat d'un groupe */
-#msgChatView{flex:1;display:none;flex-direction:column;}
+#msgChatView{flex:1;display:none;flex-direction:column;min-height:0;overflow:hidden;}
 .msg-chat-header{
   padding:12px 16px;background:#f5f8fb;border-bottom:1px solid #e8eef5;
   display:flex;align-items:center;gap:12px;flex-shrink:0;
