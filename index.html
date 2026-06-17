@@ -2292,6 +2292,13 @@ async function renderGroupList(){
 async function openGroup(gid){
   currentGroup = cachedGroups.find(g=>g.id===gid);
   if(!currentGroup) return;
+  // S'assurer que currentUser est bien chargé
+  if(!currentUser){
+    try{
+      const data = await apiRequest('/api/me');
+      if(data && data.user) currentUser = data.user;
+    }catch(e){}
+  }
   myUserId = currentUser ? String(currentUser.id) : '';
   _lastMsgId = null;
   _cachedMsgs = [];
@@ -2366,11 +2373,10 @@ function renderChatMessages(msgs){
     el.innerHTML = '<p style="text-align:center;color:#aaa;padding:24px;font-size:13px;">Soyez le premier à écrire !</p>';
     return;
   }
-  // Double vérification : userId ET nom
+  // Utiliser UNIQUEMENT l'ID — jamais le nom
   const myId = myUserId || (currentUser ? String(currentUser.id) : '');
-  const myName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}`.trim() : '';
   el.innerHTML = msgs.map(m => {
-    const isMe = (myId && String(m.userId) === myId) || (myName && m.senderName.trim() === myName);
+    const isMe = myId.length > 0 && String(m.userId) === myId;
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return `<div class="msg-bubble-wrap${isMe?' mine':''}">
       ${!isMe ? getAvatarHtml(m.senderName) : ''}
