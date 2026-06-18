@@ -1516,27 +1516,50 @@ function updateAccountUI(){
 function handleProfilePhoto(event){
   const file = event.target.files[0];
   if(!file || !currentUser) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const data = e.target.result;
+  // Redimensionner avant upload (max 400x400, qualité 0.75)
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = function(){
+    const MAX = 400;
+    let w = img.width, h = img.height;
+    if(w > MAX || h > MAX){
+      if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const data = canvas.toDataURL('image/jpeg', 0.75);
+    URL.revokeObjectURL(url);
+    // Sauvegarder localement
     localStorage.setItem('profilePhoto_' + currentUser.id, data);
     saveMyPhotoPublic(currentUser.id, data);
     showProfilePhoto(data);
+    // Sauvegarder en base de données (synchronisé entre appareils)
+    apiRequest('/api/me?action=photo', { method:'POST', body:{ photo: data } })
+      .catch(e => console.warn('Photo non sauvegardée en DB:', e));
   };
-  reader.readAsDataURL(file);
+  img.src = url;
 }
 
 function loadProfilePhoto(){
   if(!currentUser) return;
-  const data = localStorage.getItem('profilePhoto_' + currentUser.id);
-  if(data){ showProfilePhoto(data); }
-  else {
-    document.getElementById('profilePhotoImg').style.display = 'none';
-    document.getElementById('profilePhotoDefault').style.display = '';
-    // Mettre à jour aussi la bulle header
-    const bubble = document.getElementById('profileBubble');
-    if(bubble){ bubble.style.backgroundImage=''; bubble.style.backgroundSize=''; }
+  // Priorité : photo en DB (dans currentUser.profilePhoto)
+  const dbPhoto = currentUser.profilePhoto;
+  if(dbPhoto){
+    localStorage.setItem('profilePhoto_' + currentUser.id, dbPhoto);
+    saveMyPhotoPublic(currentUser.id, dbPhoto);
+    showProfilePhoto(dbPhoto);
+    return;
   }
+  // Fallback : localStorage
+  const local = localStorage.getItem('profilePhoto_' + currentUser.id);
+  if(local){ showProfilePhoto(local); return; }
+  // Aucune photo
+  document.getElementById('profilePhotoImg').style.display = 'none';
+  document.getElementById('profilePhotoDefault').style.display = '';
+  const bubble = document.getElementById('profileBubble');
+  if(bubble){ bubble.style.backgroundImage=''; bubble.style.backgroundSize=''; }
 }
 
 function showProfilePhoto(data){
