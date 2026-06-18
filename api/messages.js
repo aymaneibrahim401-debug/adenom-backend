@@ -1,16 +1,29 @@
 // api/messages.js — GET/POST /api/messages
-// action=groups : liste des groupes
-// action=list&group=xxx : messages d'un groupe
-// action=send (POST) : envoyer un message
+// Version optimisée : poll combiné messages+typing en 1 requête, body parsing unifié.
 
 const db = require('../lib/db');
-const { handlePreflight, getCurrentUser } = require('../lib/http');
+const { handlePreflight, getCurrentUser, getBody, checkAdminCode } = require('../lib/http');
 const { randomUUID } = require('crypto');
 
 const GENERAL_GROUPS = [
   { id: 'general', name: '🏠 Général', desc: 'Discussion générale pour tous les membres', color: '#0070ba', bg: '#e3f0ff' },
 ];
 const BUREAU_GROUP = { id: 'bureau', name: '🏅 Bureau ADENOM', desc: 'Groupe privé — Membres de bureau uniquement', color: '#7b2fff', bg: '#f0e8ff', isBureau: true };
+
+function getUserPromo(user) {
+  try { const d = JSON.parse(user.membershipMessage || '{}'); return d.promotion ? String(d.promotion).trim() : null; } catch { return null; }
+}
+function getUserPoste(user) {
+  try { const d = JSON.parse(user.membershipMessage || '{}'); return d.poste || null; } catch { return null; }
+}
+function canAccessGroup(groupId, user) {
+  const userPromo = getUserPromo(user);
+  const userPoste = getUserPoste(user);
+  if (groupId === 'general') return true;
+  if (groupId === 'bureau') return userPoste === 'bureau';
+  if (groupId.startsWith('promo_') && userPromo) return groupId === 'promo_' + userPromo;
+  return false;
+}
 
 module.exports = async (req, res) => {
   if (handlePreflight(req, res)) return;
@@ -21,7 +34,9 @@ module.exports = async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Non connecté.' });
     if (user.accountStatus !== 'member') return res.status(403).json({ error: 'Accès réservé aux membres.' });
 
-    const action = req.query.action;
+    const action = req.query && req.query.action;
+    // Parser le body une seule fois
+    const body = (req.method === 'POST') ? await getBody(req) : {};
 
     // ---- GROUPS ----
     if (action === 'groups' && req.method === 'GET') {
@@ -39,26 +54,28 @@ module.exports = async (req, res) => {
         });
       }
 
-      const groupsWithPreview = await Promise.all(groups.map(async g => {
-        const last = await db.getLastMessage(g.id);
+      // Toutes les requêtes getLastMessage en parallèle
+      const lastMsgs = await Promise.all(groups.map(g => db.getLastMessage(g.id)));
+      const groupsWithPreview = groups.map((g, i) => {
+        const last = lastMsgs[i];
         return { ...g, lastMessage: last ? { senderName: last.senderName, text: last.text, createdAt: last.createdAt } : null };
-      }));
-
+      });
       return res.status(200).json({ groups: groupsWithPreview });
     }
 
-    // ---- LIST ----
-    if (action === 'list' && req.method === 'GET') {
+    // ---- POLL COMBINÉ messages + typing en 1 aller-retour ----
+    if (action === 'poll' && req.method === 'GET') {
       const groupId = req.query.group;
-      if (!groupId) return res.status(400).json({ error: 'group requis.' });
-      if (!canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      const messages = await db.getMessages(groupId, 80);
-      return res.status(200).json({ messages });
+      if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
+      const [messages, typing] = await Promise.all([
+        db.getMessages(groupId, 80),
+        db.getTyping(groupId, user.id)
+      ]);
+      return res.status(200).json({ messages, typing });
     }
 
     // ---- SEND ----
     if (action === 'send' && req.method === 'POST') {
-      const body = req.body || {};
       const groupId = body.groupId;
       const text = (body.text || '').trim().slice(0, 2000);
       if (!groupId || !text) return res.status(400).json({ error: 'groupId et text requis.' });
@@ -76,30 +93,10 @@ module.exports = async (req, res) => {
 
     // ---- TYPING ----
     if (action === 'typing' && req.method === 'POST') {
-      const body = req.body || {};
       const groupId = body.groupId;
       if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
       await db.setTyping(user.id, groupId, `${user.firstName} ${user.lastName}`.trim());
       return res.status(200).json({ ok: true });
-    }
-
-    // ---- WHO IS TYPING ----
-    if (action === 'typing-list' && req.method === 'GET') {
-      const groupId = req.query.group;
-      if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      const names = await db.getTyping(groupId, user.id);
-      return res.status(200).json({ typing: names });
-    }
-
-    // ---- POLL COMBINÉ (messages + typing en 1 seule requête) ----
-    if (action === 'poll' && req.method === 'GET') {
-      const groupId = req.query.group;
-      if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      const [messages, typing] = await Promise.all([
-        db.getMessages(groupId, 80),
-        db.getTyping(groupId, user.id)
-      ]);
-      return res.status(200).json({ messages, typing });
     }
 
     // ---- ACTUALITIES LIST ----
@@ -110,10 +107,7 @@ module.exports = async (req, res) => {
 
     // ---- ACTU POST (admin only) ----
     if (action === 'actu-post' && req.method === 'POST') {
-      const { checkAdminCode } = require('../lib/http');
-      if (!checkAdminCode(req, req.body)) return res.status(403).json({ error: 'Code admin invalide.' });
-      const body = req.body || {};
-      const { randomUUID } = require('crypto');
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
       const a = {
         id: randomUUID(),
         tag: body.tag || 'info',
@@ -128,9 +122,8 @@ module.exports = async (req, res) => {
 
     // ---- ACTU DELETE (admin only) ----
     if (action === 'actu-delete' && req.method === 'POST') {
-      const { checkAdminCode } = require('../lib/http');
-      if (!checkAdminCode(req, req.body)) return res.status(403).json({ error: 'Code admin invalide.' });
-      await db.deleteActuality(req.body.id);
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      await db.deleteActuality(body.id);
       return res.status(200).json({ ok: true });
     }
 
@@ -141,18 +134,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Erreur interne.' });
   }
 };
-
-function getUserPromo(user) {
-  try { const d = JSON.parse(user.membershipMessage || '{}'); return d.promotion ? String(d.promotion).trim() : null; } catch(e) { return null; }
-}
-function getUserPoste(user) {
-  try { const d = JSON.parse(user.membershipMessage || '{}'); return d.poste || null; } catch(e) { return null; }
-}
-function canAccessGroup(groupId, user) {
-  const userPromo = getUserPromo(user);
-  const userPoste = getUserPoste(user);
-  if (groupId === 'general') return true;
-  if (groupId === 'bureau') return userPoste === 'bureau';
-  if (groupId.startsWith('promo_') && userPromo) return groupId === 'promo_' + userPromo;
-  return false;
-}
