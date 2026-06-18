@@ -2100,7 +2100,7 @@ function closeRegionPage(){
 .msg-messages{
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:8px 10px 4px;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:column-reverse;
   background:#f0f2f5;min-height:0;
 }
 
@@ -2588,38 +2588,38 @@ function renderChatMessages(msgs){
   const gid = currentGroup ? currentGroup.id : '';
 
   // Grouper les messages consécutifs du même expéditeur
+  // column-reverse : on génère les messages du plus récent au plus ancien
+  // visuellement ils apparaissent dans l'ordre chronologique, dernier en bas
   let html = '';
   let lastDate = '';
-  for(let i = 0; i < msgs.length; i++){
-    const m = msgs[i];
+  const reversed = [...msgs].reverse();
+  for(let i = 0; i < reversed.length; i++){
+    const m = reversed[i];
     const isMe = myId.length > 0 && String(m.userId) === myId;
-    const prev = msgs[i-1];
-    const next = msgs[i+1];
+    // Dans l'ordre inversé, "prev" est le message plus récent, "next" est le plus ancien
+    const prev = reversed[i-1]; // plus récent
+    const next = reversed[i+1]; // plus ancien
     const sameAsPrev = prev && prev.userId === m.userId;
     const sameAsNext = next && next.userId === m.userId;
 
-    // Séparateur de date
+    // Séparateur de date (dans l'ordre inversé, on le met APRÈS le groupe)
     const msgDate = new Date(m.createdAt).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
     if(msgDate !== lastDate){
+      if(lastDate !== '') html += `<div class="msg-date-sep"><span>${lastDate}</span></div>`;
       lastDate = msgDate;
-      html += `<div class="msg-date-sep"><span>${msgDate}</span></div>`;
     }
 
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-
-    // Afficher le nom de l'expéditeur : utilise le pseudo s'il existe
     const displayName = getDisplayNameForMsg(m, gid);
 
-    // Classes bulle
     let bubbleClasses = 'msg-bubble';
     if(isMe) bubbleClasses += ' mine';
     if(sameAsPrev) bubbleClasses += ' continued';
     if(!sameAsNext) bubbleClasses += ' last';
 
-    // Classes wrap (grouped = avatar caché car même expéditeur que le suivant)
     let wrapClasses = 'msg-bubble-wrap';
     if(isMe) wrapClasses += ' mine';
-    if(sameAsNext) wrapClasses += ' grouped';
+    if(sameAsPrev) wrapClasses += ' grouped';
     if(!sameAsPrev && i > 0) wrapClasses += ' new-sender';
 
     html += `<div class="${wrapClasses}">
@@ -2631,14 +2631,11 @@ function renderChatMessages(msgs){
       </div>
     </div>`;
   }
-  const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  // Dernier séparateur de date
+  if(lastDate) html += `<div class="msg-date-sep"><span>${lastDate}</span></div>`;
   el.innerHTML = html;
-
-  // Premier chargement OU utilisateur déjà en bas → scroller jusqu'au dernier message
-  if(wasAtBottom || _firstLoad){
-    _firstLoad = false;
-    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-  }
+  // Pas besoin de scroll JS : flex-direction:column-reverse
+  // maintient automatiquement le scroll en bas (= messages récents visibles)
 }
 
 // Retourne le nom affiché d'un message (pseudo si dispo)
