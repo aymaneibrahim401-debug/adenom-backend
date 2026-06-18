@@ -2099,10 +2099,9 @@ function closeRegionPage(){
 /* ========== MESSAGES ========== */
 .msg-messages{
   flex:1;overflow-y:auto;overflow-x:hidden;
-  padding:10px 12px 6px;
-  display:flex;flex-direction:column;gap:2px;
+  padding:8px 10px 4px;
+  display:flex;flex-direction:column;
   background:#f0f2f5;min-height:0;
-  align-items:stretch;
 }
 
 /* Séparateur de date */
@@ -2113,38 +2112,40 @@ function closeRegionPage(){
 }
 .msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#d8dadf;}
 
-/* ===== BULLES — layout propre ===== */
-
-/* Wrap : conteneur pleine largeur, items collés à gauche par défaut */
+/* Wrap bulle */
 .msg-bubble-wrap{
   display:flex;
   align-items:flex-end;
   gap:6px;
-  width:100%;
-  margin:0;
+  margin-bottom:2px;
 }
-/* Mes messages : on inverse l'ordre (avatar à droite, bulle à gauche de l'avatar) */
 .msg-bubble-wrap.mine{
   flex-direction:row-reverse;
+  align-self:flex-end;
+  max-width:80%;
 }
-/* Avatar caché si même expéditeur consécutif */
+.msg-bubble-wrap:not(.mine){
+  align-self:flex-start;
+  max-width:80%;
+}
+/* Même expéditeur consécutif : avatar invisible */
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
+/* Changement d'expéditeur : petit espace */
+.msg-bubble-wrap.new-sender{ margin-top:8px; }
 
 /* Avatar */
 .msg-avatar-sm{
   width:28px;height:28px;border-radius:50%;background:#d8dadf;
   display:flex;align-items:center;justify-content:center;
   font-size:11px;font-weight:700;flex-shrink:0;align-self:flex-end;
-  overflow:hidden;letter-spacing:0;
+  overflow:hidden;
 }
 .msg-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 
-/* Colonne texte : limiter à 72% de la largeur totale */
+/* Colonne texte */
 .msg-bubble-col{
-  display:flex;
-  flex-direction:column;
-  max-width:72%;
-  min-width:0;
+  display:flex;flex-direction:column;
+  min-width:0;flex:1;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
@@ -2154,36 +2155,37 @@ function closeRegionPage(){
   margin-bottom:2px;padding:0 4px;
 }
 
-/* Bulle : s'adapte au texte, jamais plus large que la colonne */
+/* Bulle */
 .msg-bubble{
-  padding:9px 13px;
+  padding:8px 13px;
   border-radius:18px;
-  font-size:14px;line-height:1.5;
+  font-size:14px;line-height:1.45;
   word-break:break-word;white-space:pre-wrap;
-  display:inline;
+  display:inline-block;
+  max-width:100%;
   background:#fff;color:#050505;
   border-bottom-left-radius:4px;
   box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  cursor:pointer;
 }
 .msg-bubble.mine{
   background:#0084ff;color:#fff;
   border-bottom-left-radius:18px;
   border-bottom-right-radius:4px;
-  box-shadow:0 1px 3px rgba(0,112,255,0.25);
+  box-shadow:0 1px 3px rgba(0,112,255,0.22);
 }
-/* Bulle "suite" (même expéditeur, pas le premier) */
 .msg-bubble.continued:not(.mine){border-top-left-radius:4px;}
 .msg-bubble.mine.continued{border-top-right-radius:4px;}
-/* Bulle "fin" (même expéditeur, dernier du groupe) */
 .msg-bubble.last:not(.mine){border-bottom-left-radius:18px;}
 
-/* Heure */
+/* Heure — apparaît au tap/clic sur la bulle */
 .msg-bubble-meta{
   font-size:10px;color:#65676b;
   margin-top:2px;padding:0 4px;
-  opacity:0;transition:opacity 0.2s;
+  max-height:0;overflow:hidden;
+  transition:max-height 0.2s ease;
 }
-.msg-bubble-wrap:hover .msg-bubble-meta{opacity:1;}
+.msg-bubble-meta.visible{ max-height:20px; }
 .msg-bubble-wrap.mine .msg-bubble-meta{text-align:right;}
 
 /* ========== TYPING INDICATOR ========== */
@@ -2612,14 +2614,13 @@ function renderChatMessages(msgs){
     let wrapClasses = 'msg-bubble-wrap';
     if(isMe) wrapClasses += ' mine';
     if(sameAsNext) wrapClasses += ' grouped';
-    // Petit espace quand l'expéditeur change
-    const topMargin = (!sameAsPrev && i > 0) ? 'margin-top:6px;' : '';
+    if(!sameAsPrev && i > 0) wrapClasses += ' new-sender';
 
-    html += `<div class="${wrapClasses}" style="${topMargin}">
+    html += `<div class="${wrapClasses}">
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
       <div class="msg-bubble-col">
         ${(!isMe && !sameAsPrev) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
-        <div style="display:block"><span class="${bubbleClasses}">${escapeHtml(m.text)}</span></div>
+        <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">${escapeHtml(m.text)}</div>
         <div class="msg-bubble-meta">${time}</div>
       </div>
     </div>`;
@@ -2661,6 +2662,16 @@ function getAvatarHtml(userId, displayName){
   const colors = ['#0070ba','#e05c2a','#7b2fff','#31a24c','#e04080','#2a7ae0'];
   const colorIdx = Math.abs(String(userId).split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % colors.length;
   return `<div class="msg-avatar-sm" style="background:${colors[colorIdx]};color:#fff;">${initials}</div>`;
+}
+
+function toggleMsgTime(el){
+  const meta = el.nextElementSibling;
+  if(!meta) return;
+  // Fermer tous les autres
+  document.querySelectorAll('.msg-bubble-meta.visible').forEach(m => {
+    if(m !== meta) m.classList.remove('visible');
+  });
+  meta.classList.toggle('visible');
 }
 
 function escapeHtml(str){
