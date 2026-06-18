@@ -2015,7 +2015,10 @@ function closeRegionPage(){
   </div>
 </div>
 
-<div id="imgLightbox" onclick="closeLightbox()"><button id="imgLightboxClose" onclick="closeLightbox()">✕</button><img id="lightboxImg" src="" alt=""></div>
+<div id="imgLightbox" onclick="closeLightbox()">
+  <button onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
 
 <!-- ========== MESSAGERIE GROUPES ========== -->
 <style>
@@ -2183,7 +2186,7 @@ function closeRegionPage(){
 
 /* Bulle */
 .msg-bubble{
-  padding:8px 13px;
+  padding:6px 10px;
   border-radius:18px;
   font-size:14px;line-height:1.45;
   word-break:break-word;white-space:pre-wrap;
@@ -2266,19 +2269,33 @@ function closeRegionPage(){
 }
 .msg-send-btn:hover{background:#0070d6;}
 
-.msg-photo-btn{width:38px;height:38px;background:none;color:#65676b;border:none;
-  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.msg-photo-btn:hover{background:#f0f2f5;}
-#msgImgPreviewWrap{padding:6px 12px;display:none;align-items:center;gap:8px;border-top:1px solid #e4e6eb;}
-#msgImgPreview{width:48px;height:48px;object-fit:cover;border-radius:8px;}
-#msgImgRemove{background:#ffeaea;color:#e0334d;border:none;border-radius:50%;
-  width:20px;height:20px;font-size:12px;cursor:pointer;font-weight:700;line-height:20px;}
-.bubble-img{max-width:180px;max-height:200px;border-radius:10px;display:block;margin-top:4px;cursor:pointer;object-fit:cover;}
-#imgLightbox{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
+.msg-photo-btn{
+  width:38px;height:38px;background:#f0f2f5;color:#65676b;border:none;
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:0.15s;
+}
+.msg-photo-btn:hover{background:#e4e6eb;}
+.msg-img-preview-wrap{
+  padding:8px 12px 0;display:flex;align-items:center;gap:8px;
+  background:#fff;border-top:1px solid #e4e6eb;
+}
+.msg-img-preview{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1.5px solid #e4e6eb;}
+.msg-img-remove{
+  background:#ffeaea;color:#e0334d;border:none;border-radius:50%;
+  width:22px;height:22px;font-size:14px;cursor:pointer;font-weight:700;
+}
+.msg-bubble img.bubble-img{
+  max-width:200px;max-height:220px;border-radius:10px;
+  display:block;margin-top:4px;cursor:pointer;object-fit:cover;
+}
+#imgLightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;
+  display:none;align-items:center;justify-content:center;
+}
 #imgLightbox.show{display:flex;}
 #imgLightbox img{max-width:92vw;max-height:88vh;border-radius:12px;}
-#imgLightboxClose{position:fixed;top:16px;right:16px;background:rgba(255,255,255,0.2);
-  color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;}
+#imgLightbox button{position:fixed;top:18px;right:18px;background:rgba(255,255,255,0.2);
+  color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;}
 
 .msg-send-btn:active{transform:scale(0.92);}
 .msg-send-btn svg{width:17px;height:17px;}
@@ -2379,9 +2396,13 @@ function closeRegionPage(){
       <div class="msg-messages" id="chatMessages"></div>
       <div id="typingIndicator"></div>
       <input type="file" id="msgImgInput" accept="image/*" style="display:none" onchange="onMsgImgPicked(event)">
-      <div id="msgImgPreviewWrap"><img id="msgImgPreview" src="" alt=""><button id="msgImgRemove" onclick="removeMsgImg()">✕</button><span style="font-size:11px;color:#888">Photo prête</span></div>
+      <div id="msgImgPreviewWrap" style="display:none" class="msg-img-preview-wrap">
+        <img id="msgImgPreview" class="msg-img-preview" src="" alt="">
+        <button class="msg-img-remove" onclick="removeMsgImg()">✕</button>
+        <span style="font-size:11px;color:#888;">Photo prête</span>
+      </div>
       <div class="msg-input-area">
-        <button class="msg-photo-btn" onclick="document.getElementById('msgImgInput').click()">
+        <button class="msg-photo-btn" onclick="document.getElementById('msgImgInput').click()" title="Envoyer une photo">
           <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
         </button>
         <textarea class="msg-input" id="msgInput" placeholder="Aa" rows="1"
@@ -2689,7 +2710,10 @@ function renderChatMessages(msgs){
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
       <div class="msg-bubble-col">
         ${(!isMe && isFirst) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
-        <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">${m.text ? escapeHtml(m.text) : ''}${m.image ? `<img class="bubble-img" src="${m.image}" alt="" onclick="event.stopPropagation();openLightbox('${m.image}')">` : ''}</div>
+        <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">
+          ${m.text ? escapeHtml(m.text) : ''}
+          ${m.image ? `<img class="bubble-img" src="${m.image}" alt="photo" onclick="event.stopPropagation();openLightbox('${m.image}')">` : ''}
+        </div>
         <div class="msg-bubble-meta">${time}</div>
       </div>
     </div>`;
@@ -2757,40 +2781,35 @@ function onMsgInput(){
 // ---- ENVOI ----
 
 let msgImgData = null;
+
 function onMsgImgPicked(e){
-  const file = e.target.files[0]; if(!file) return;
-  if(file.size > 10*1024*1024){ alert('Image trop lourde (max 10MB).'); e.target.value=''; return; }
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = function(){
-    const MAX = 1200;
-    let w = img.width, h = img.height;
-    if(w > MAX || h > MAX){
-      if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-      else { w = Math.round(w * MAX / h); h = MAX; }
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    // Compression progressive jusqu'à passer sous 800KB en base64 (~600KB image)
-    let quality = 0.82;
-    let data = canvas.toDataURL('image/jpeg', quality);
-    while(data.length > 800000 && quality > 0.3){
-      quality -= 0.1;
-      data = canvas.toDataURL('image/jpeg', quality);
-    }
-    URL.revokeObjectURL(url);
-    msgImgData = data;
-    document.getElementById('msgImgPreview').src = data;
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ alert('Image trop lourde (max 2MB).'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    msgImgData = ev.target.result;
+    document.getElementById('msgImgPreview').src = msgImgData;
     document.getElementById('msgImgPreviewWrap').style.display = 'flex';
   };
-  img.onerror = function(){ URL.revokeObjectURL(url); alert('Impossible de lire cette image.'); };
-  img.src = url;
+  reader.readAsDataURL(file);
   e.target.value = '';
 }
-function removeMsgImg(){ msgImgData = null; document.getElementById('msgImgPreviewWrap').style.display = 'none'; document.getElementById('msgImgPreview').src = ''; }
-function openLightbox(src){ document.getElementById('lightboxImg').src = src; document.getElementById('imgLightbox').classList.add('show'); }
-function closeLightbox(){ document.getElementById('imgLightbox').classList.remove('show'); }
+
+function removeMsgImg(){
+  msgImgData = null;
+  document.getElementById('msgImgPreviewWrap').style.display = 'none';
+  document.getElementById('msgImgPreview').src = '';
+}
+
+function openLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('imgLightbox').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('imgLightbox').classList.remove('show');
+}
+
 async function sendMsg(){
   if(!currentUser||!currentGroup) return;
   const input = document.getElementById('msgInput');

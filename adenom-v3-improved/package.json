@@ -1,0 +1,14 @@
+{
+  "name": "adenom-backend",
+  "version": "2.0.0",
+  "description": "Backend ADENOM adapté pour Vercel (fonctions serverless + base de données Turso/libSQL)",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  },
+  "author": "ADENOM",
+  "license": "ISC"
+}

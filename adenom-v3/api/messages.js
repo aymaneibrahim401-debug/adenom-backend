@@ -87,8 +87,7 @@ module.exports = async (req, res) => {
       const text = (body.text || '').trim().slice(0, 2000);
       const image = body.image || null;
       if (!groupId || (!text && !image)) return res.status(400).json({ error: 'groupId et text ou image requis.' });
-      // En base64, 4 chars = 3 octets → taille réelle ≈ length * 0.75
-      if (image && image.length * 0.75 > 1.2 * 1024 * 1024) return res.status(400).json({ error: 'Image trop lourde (max ~1MB compressée).' });
+      if (image && image.length > 3 * 1024 * 1024) return res.status(400).json({ error: 'Image trop lourde (max 2MB).' });
       if (!canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
 
       const msg = {
