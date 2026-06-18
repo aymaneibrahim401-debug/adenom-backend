@@ -2015,8 +2015,6 @@ function closeRegionPage(){
   </div>
 </div>
 
-
-<!-- Lightbox image messages -->
 <div id="imgLightbox" onclick="closeLightbox()">
   <button onclick="closeLightbox()">✕</button>
   <img id="lightboxImg" src="" alt="">
@@ -2131,7 +2129,7 @@ function closeRegionPage(){
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:8px 10px 4px;
   display:flex;flex-direction:column-reverse;
-  background:#fff;min-height:0;
+  background:#f0f2f5;min-height:0;
 }
 
 /* Séparateur de date */
@@ -2140,7 +2138,7 @@ function closeRegionPage(){
   font-size:11px;color:#65676b;font-weight:600;
   display:flex;align-items:center;gap:8px;
 }
-.msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#e0e0e0;}
+.msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#d8dadf;}
 
 /* Wrap bulle */
 .msg-bubble-wrap{
@@ -2148,14 +2146,15 @@ function closeRegionPage(){
   align-items:flex-end;
   gap:6px;
   margin-bottom:2px;
-  max-width:75%;
 }
 .msg-bubble-wrap.mine{
   flex-direction:row-reverse;
   align-self:flex-end;
+  max-width:80%;
 }
 .msg-bubble-wrap:not(.mine){
   align-self:flex-start;
+  max-width:80%;
 }
 /* Même expéditeur consécutif : avatar invisible */
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
@@ -2165,44 +2164,44 @@ function closeRegionPage(){
 
 /* Avatar */
 .msg-avatar-sm{
-  width:32px;height:32px;border-radius:50%;background:#1a73e8;
+  width:28px;height:28px;border-radius:50%;background:#d8dadf;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-start;margin-top:18px;
+  font-size:11px;font-weight:700;flex-shrink:0;align-self:flex-end;
   overflow:hidden;
 }
 .msg-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 
 /* Colonne texte */
 .msg-bubble-col{
-  display:inline-flex;flex-direction:column;
-  min-width:0;max-width:100%;
+  display:flex;flex-direction:column;
+  min-width:0;flex:1;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
 
 .msg-sender{
-  font-size:12px;font-weight:700;color:#1a73e8;
-  margin-bottom:2px;padding:0 2px;
+  font-size:11px;font-weight:700;color:#0070ba;
+  margin-bottom:2px;padding:0 4px;
 }
 
 /* Bulle */
 .msg-bubble{
-  padding:8px 13px;
+  padding:6px 10px;
   border-radius:18px;
   font-size:14px;line-height:1.45;
   word-break:break-word;white-space:pre-wrap;
   display:inline-block;
   max-width:100%;
-  background:#e8f0fe;color:#1a1a1a;
+  background:#fff;color:#050505;
   border-bottom-left-radius:4px;
-  box-shadow:none;
+  box-shadow:0 1px 2px rgba(0,0,0,0.08);
   cursor:pointer;
 }
 .msg-bubble.mine{
-  background:#1a73e8;color:#fff;
+  background:#0084ff;color:#fff;
   border-bottom-left-radius:18px;
   border-bottom-right-radius:4px;
-  box-shadow:none;
+  box-shadow:0 1px 3px rgba(0,112,255,0.22);
 }
 .msg-bubble.continued:not(.mine){border-top-left-radius:4px;}
 .msg-bubble.mine.continued{border-top-right-radius:4px;}
@@ -2226,7 +2225,7 @@ function closeRegionPage(){
 
 /* ========== TYPING INDICATOR ========== */
 #typingIndicator{
-  padding:0 12px 6px;background:#fff;flex-shrink:0;
+  padding:0 12px 6px;background:#f0f2f5;flex-shrink:0;
   display:none;
 }
 .typing-wrap{
@@ -2252,7 +2251,7 @@ function closeRegionPage(){
 /* ========== ZONE DE SAISIE ========== */
 .msg-input-area{
   display:flex;gap:8px;padding:10px 12px 14px;
-  border-top:1px solid #ececec;flex-shrink:0;
+  border-top:1px solid #e4e6eb;flex-shrink:0;
   background:#fff;align-items:flex-end;
 }
 .msg-input{
@@ -2273,34 +2272,29 @@ function closeRegionPage(){
 .msg-photo-btn{
   width:38px;height:38px;background:#f0f2f5;color:#65676b;border:none;
   border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:0.15s;font-size:18px;
+  flex-shrink:0;transition:0.15s;
 }
 .msg-photo-btn:hover{background:#e4e6eb;}
 .msg-img-preview-wrap{
   padding:8px 12px 0;display:flex;align-items:center;gap:8px;
   background:#fff;border-top:1px solid #e4e6eb;
 }
-.msg-img-preview{
-  width:56px;height:56px;object-fit:cover;border-radius:10px;border:1.5px solid #e4e6eb;
-}
+.msg-img-preview{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1.5px solid #e4e6eb;}
 .msg-img-remove{
   background:#ffeaea;color:#e0334d;border:none;border-radius:50%;
-  width:22px;height:22px;font-size:14px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-weight:700;
+  width:22px;height:22px;font-size:14px;cursor:pointer;font-weight:700;
 }
 .msg-bubble img.bubble-img{
   max-width:200px;max-height:220px;border-radius:10px;
-  display:block;margin-top:4px;cursor:pointer;
-  object-fit:cover;
+  display:block;margin-top:4px;cursor:pointer;object-fit:cover;
 }
-.msg-bubble.mine img.bubble-img{margin-left:auto;}
 #imgLightbox{
   position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;
   display:none;align-items:center;justify-content:center;
 }
 #imgLightbox.show{display:flex;}
-#imgLightbox img{max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,0.5);}
-#imgLightbox button{position:fixed;top:18px;right:18px;background:rgba(255,255,255,0.15);
+#imgLightbox img{max-width:92vw;max-height:88vh;border-radius:12px;}
+#imgLightbox button{position:fixed;top:18px;right:18px;background:rgba(255,255,255,0.2);
   color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;}
 
 .msg-send-btn:active{transform:scale(0.92);}
@@ -2786,7 +2780,6 @@ function onMsgInput(){
 
 // ---- ENVOI ----
 
-// ---- ENVOI PHOTO EN MESSAGE ----
 let msgImgData = null;
 
 function onMsgImgPicked(e){
@@ -2824,12 +2817,13 @@ async function sendMsg(){
   const imageToSend = msgImgData;
   if(!rawText && !imageToSend) return;
 
+  // Utiliser le pseudo si défini
   const gid = currentGroup.id;
   const displayName = getMyDisplayName(gid);
 
   input.value = '';
   input.style.height = 'auto';
-  if(imageToSend){ removeMsgImg(); }
+  if(imageToSend) removeMsgImg();
 
   const tempMsg = {
     id: 'temp_' + Date.now(),
@@ -2843,6 +2837,7 @@ async function sendMsg(){
   renderChatMessages(_cachedMsgs);
 
   try{
+    // Envoyer avec senderName = pseudo (ou nom réel)
     await apiRequest('/api/messages?action=send',{
       method:'POST',
       body:{ groupId: gid, text: rawText, senderName: displayName, image: imageToSend || null }
