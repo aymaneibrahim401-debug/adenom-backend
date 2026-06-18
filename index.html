@@ -114,6 +114,74 @@ header.hide-on-scroll{
 
 /* PROFILE BUBBLE */
 .profile-bubble-wrap{position:relative;}
+
+/* ===== CLOCHE NOTIFICATIONS ===== */
+.notif-bell-wrap{
+  position:relative;display:flex;align-items:center;
+  margin-right:6px;
+}
+.notif-bell-btn{
+  width:38px;height:38px;border-radius:50%;
+  background:none;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;transition:0.15s;color:#003087;
+  position:relative;
+}
+.notif-bell-btn:hover{background:#f0f2f5;}
+.notif-badge{
+  position:absolute;top:4px;right:4px;
+  min-width:16px;height:16px;border-radius:8px;
+  background:#e0334d;color:#fff;font-size:10px;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  padding:0 4px;border:2px solid #fff;line-height:1;
+}
+.notif-badge.show{display:flex;}
+
+/* Panneau notifications */
+.notif-panel{
+  position:fixed;top:56px;right:8px;width:320px;max-width:96vw;
+  background:#fff;border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  z-index:3000;display:none;flex-direction:column;
+  max-height:70vh;overflow:hidden;
+}
+.notif-panel.open{display:flex;}
+.notif-panel-header{
+  padding:14px 16px 10px;border-bottom:1px solid #f0f2f5;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.notif-panel-title{font-size:16px;font-weight:800;color:#050505;}
+.notif-clear-btn{
+  font-size:12px;color:#0070ba;font-weight:600;
+  background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;
+}
+.notif-clear-btn:hover{background:#f0f2f5;}
+.notif-list{overflow-y:auto;flex:1;}
+.notif-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 16px;border-bottom:1px solid #f0f2f5;
+  cursor:pointer;transition:background 0.1s;
+}
+.notif-item:hover{background:#f8f9fa;}
+.notif-item.unread{background:#e8f0fe;}
+.notif-item.unread:hover{background:#dce8fd;}
+.notif-icon{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.notif-icon.msg{background:#e3f0ff;}
+.notif-icon.actu{background:#fff0e3;}
+.notif-icon.system{background:#e9fbe9;}
+.notif-icon.welcome{background:#f0e8ff;}
+.notif-body{flex:1;min-width:0;}
+.notif-body-title{font-size:13px;font-weight:600;color:#050505;margin-bottom:2px;}
+.notif-body-sub{font-size:12px;color:#65676b;line-height:1.4;}
+.notif-body-time{font-size:11px;color:#b0b3b8;margin-top:3px;}
+.notif-empty{
+  padding:32px 16px;text-align:center;
+  color:#65676b;font-size:13px;
+}
 .profile-bubble{
   width:38px;height:38px;border-radius:50%;
   background:#0070ba;color:white;border:none;
@@ -649,6 +717,22 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
     <img src="images/denom_new.jpeg" id="memberBanner" class="member-banner" alt="ADENOM - 30e Anniversaire" style="display:none;">
   </div>
   <button class="hamburger" id="hamburgerBtn" onclick="openMenu()">☰</button>
+  <!-- Cloche notifications -->
+  <div class="notif-bell-wrap" id="notifBellWrap" style="display:none;">
+    <button class="notif-bell-btn" onclick="toggleNotifPanel()" title="Notifications">
+      🔔
+      <span class="notif-badge" id="notifBadge"></span>
+    </button>
+  </div>
+  <!-- Panneau notifications -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <span class="notif-panel-title">🔔 Notifications</span>
+      <button class="notif-clear-btn" onclick="clearAllNotifs()">Tout effacer</button>
+    </div>
+    <div class="notif-list" id="notifList"></div>
+  </div>
+
   <div class="profile-bubble-wrap" id="profileBubbleWrap" style="display:none;">
     <button class="profile-bubble" id="profileBubble" onclick="toggleProfileMenu()">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
@@ -1459,6 +1543,7 @@ function updateAccountUI(){
   const heroCta = document.getElementById('heroCta');
 
   const isLoggedIn = !!currentUser;
+  if(isLoggedIn) renderNotifBadge();
 
   if(isLoggedIn){
     if(btnLogin) btnLogin.style.display = 'none';
@@ -1485,6 +1570,7 @@ function updateAccountUI(){
       if(notif){ notif.style.display='flex'; notif.className='profile-notif member'; }
       if(notifIcon) notifIcon.textContent = '🎉';
       if(notifText) notifText.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
+      addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
       if(dot) dot.style.background = '#2ecc71';
       const mnl = document.getElementById('memberNavLinks');
       if(mnl) mnl.style.display = '';
@@ -2619,10 +2705,18 @@ async function pollGroupData(){
 
     const lastId = msgs.length ? msgs[msgs.length-1].id : null;
     if(lastId !== _lastMsgId || photoChanged){
+      // Notif si nouveau message reçu d'un autre utilisateur
+      if(_lastMsgId !== null && msgs.length){
+        const last = msgs[msgs.length-1];
+        const myId2 = currentUser ? String(currentUser.id) : '';
+        if(String(last.userId) !== myId2){
+          const txt = last.text.startsWith('[photo:') ? '📷 Photo' : last.text.substring(0,60);
+          addNotif('msg', last.senderName + ' — ' + (currentGroup ? currentGroup.name : ''), txt, 'messaging');
+        }
+      }
       _lastMsgId = lastId;
       _cachedMsgs = msgs;
       renderChatMessages(msgs);
-      // Marquer comme lu
       if(msgs.length) setGroupLastSeen(currentGroup.id, new Date(msgs[msgs.length-1].createdAt).getTime());
     }
 
@@ -2752,6 +2846,97 @@ function toggleMsgTime(el){
   // Si ce n'était pas déjà ouvert, l'ouvrir
   if(!isVisible) meta.classList.add('visible');
 }
+
+// ============ SYSTÈME DE NOTIFICATIONS ============
+
+function getNotifs(){
+  try{ return JSON.parse(localStorage.getItem('adenom_notifs') || '[]'); }catch(e){ return []; }
+}
+function saveNotifs(notifs){
+  localStorage.setItem('adenom_notifs', JSON.stringify(notifs.slice(0, 100)));
+}
+function addNotif(type, title, sub, action){
+  const notifs = getNotifs();
+  // Éviter les doublons (même titre dans les 60 dernières secondes)
+  const now = Date.now();
+  if(notifs.find(n => n.title === title && now - n.ts < 60000)) return;
+  notifs.unshift({ id: now, type, title, sub, action: action||null, ts: now, read: false });
+  saveNotifs(notifs);
+  renderNotifBadge();
+  renderNotifList();
+}
+function renderNotifBadge(){
+  const notifs = getNotifs();
+  const unread = notifs.filter(n => !n.read).length;
+  const badge = document.getElementById('notifBadge');
+  if(!badge) return;
+  if(unread > 0){
+    badge.textContent = unread > 99 ? '99+' : unread;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+function renderNotifList(){
+  const el = document.getElementById('notifList');
+  if(!el) return;
+  const notifs = getNotifs();
+  if(!notifs.length){
+    el.innerHTML = '<div class="notif-empty">Aucune notification</div>';
+    return;
+  }
+  const icons = { msg:'💬', actu:'📢', system:'✅', welcome:'🎉' };
+  el.innerHTML = notifs.map(n => {
+    const d = new Date(n.ts);
+    const now = new Date();
+    const diffMin = Math.floor((now - d) / 60000);
+    let timeStr;
+    if(diffMin < 1) timeStr = "À l'instant";
+    else if(diffMin < 60) timeStr = `Il y a ${diffMin} min`;
+    else if(diffMin < 1440) timeStr = `Il y a ${Math.floor(diffMin/60)}h`;
+    else timeStr = d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    return `<div class="notif-item${n.read?'':' unread'}" onclick="clickNotif(${n.id})">
+      <div class="notif-icon ${n.type}">${icons[n.type]||'🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-body-title">${escapeHtml(n.title)}</div>
+        <div class="notif-body-sub">${escapeHtml(n.sub||'')}</div>
+        <div class="notif-body-time">${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function clickNotif(id){
+  const notifs = getNotifs();
+  const n = notifs.find(x => x.id === id);
+  if(n){ n.read = true; saveNotifs(notifs); renderNotifBadge(); renderNotifList(); }
+  if(n && n.action === 'messaging'){ closeNotifPanel(); openMessaging(); }
+  if(n && n.action === 'actu'){ closeNotifPanel(); }
+}
+function clearAllNotifs(){
+  saveNotifs([]);
+  renderNotifBadge();
+  renderNotifList();
+}
+function toggleNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  if(panel.classList.contains('open')){
+    closeNotifPanel();
+  } else {
+    renderNotifList();
+    panel.classList.add('open');
+  }
+}
+function closeNotifPanel(){
+  document.getElementById('notifPanel').classList.remove('open');
+}
+// Fermer le panneau si clic en dehors
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('notifPanel');
+  const bell = document.getElementById('notifBellWrap');
+  if(panel && bell && !panel.contains(e.target) && !bell.contains(e.target)){
+    closeNotifPanel();
+  }
+});
 
 function escapeHtml(str){
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2980,6 +3165,16 @@ async function loadActuList(){
     const res = await fetch('/api/messages?action=actu-list');
     const data = await res.json();
     const list = data.actualities || [];
+    // Notifier pour les nouvelles actualités
+    const lastSeenActu = parseInt(localStorage.getItem('adenom_last_actu')||'0', 10);
+    list.forEach(a => {
+      const ts = new Date(a.createdAt).getTime();
+      if(ts > lastSeenActu){
+        const tag = a.tag==='urgent' ? '🚨' : a.tag==='event' ? '📅' : '📢';
+        addNotif('actu', tag + ' ' + (a.title||'Nouvelle publication'), a.text ? a.text.substring(0,80) : '', 'actu');
+      }
+    });
+    if(list.length) localStorage.setItem('adenom_last_actu', new Date(list[0].createdAt).getTime());
     if(!list.length){
       el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>';
       return;
