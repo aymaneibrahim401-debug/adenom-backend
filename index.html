@@ -2486,6 +2486,10 @@ async function renderGroupList(){
   const el = document.getElementById('msgGroupList');
   el.innerHTML = '<div style="text-align:center;padding:30px;color:#65676b;font-size:13px;">Chargement...</div>';
   try{
+    // S'assurer que currentUser est chargé avant de comparer les userId
+    if(!currentUser){
+      try{ const me = await apiRequest('/api/me'); if(me && me.user) currentUser = me.user; }catch(e){}
+    }
     const data = await apiRequest('/api/messages?action=groups');
     // Trier : groupes avec message le plus récent en premier
     cachedGroups = (data.groups || []).sort((a,b) => {
