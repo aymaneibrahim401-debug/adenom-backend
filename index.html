@@ -2131,7 +2131,7 @@ function closeRegionPage(){
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:8px 10px 4px;
   display:flex;flex-direction:column-reverse;
-  background:#f0f2f5;min-height:0;
+  background:#fff;min-height:0;
 }
 
 /* Séparateur de date */
@@ -2140,7 +2140,7 @@ function closeRegionPage(){
   font-size:11px;color:#65676b;font-weight:600;
   display:flex;align-items:center;gap:8px;
 }
-.msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#d8dadf;}
+.msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#e0e0e0;}
 
 /* Wrap bulle */
 .msg-bubble-wrap{
@@ -2166,9 +2166,9 @@ function closeRegionPage(){
 
 /* Avatar */
 .msg-avatar-sm{
-  width:28px;height:28px;border-radius:50%;background:#d8dadf;
+  width:32px;height:32px;border-radius:50%;background:#1a73e8;
   display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;flex-shrink:0;align-self:flex-end;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;align-self:flex-start;margin-top:18px;
   overflow:hidden;
 }
 .msg-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
@@ -2182,8 +2182,8 @@ function closeRegionPage(){
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
 
 .msg-sender{
-  font-size:11px;font-weight:700;color:#0070ba;
-  margin-bottom:2px;padding:0 4px;
+  font-size:12px;font-weight:700;color:#1a73e8;
+  margin-bottom:2px;padding:0 2px;
 }
 
 /* Bulle */
@@ -2194,16 +2194,16 @@ function closeRegionPage(){
   word-break:break-word;white-space:pre-wrap;
   display:inline-block;
   max-width:72%;
-  background:#fff;color:#050505;
+  background:#e8f0fe;color:#050505;
   border-bottom-left-radius:4px;
-  box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  box-shadow:none;
   cursor:pointer;
 }
 .msg-bubble.mine{
-  background:#0084ff;color:#fff;
+  background:#1a73e8;color:#fff;
   border-bottom-left-radius:18px;
   border-bottom-right-radius:4px;
-  box-shadow:0 1px 3px rgba(0,112,255,0.22);
+  box-shadow:none;
 }
 .msg-bubble.continued:not(.mine){border-top-left-radius:4px;}
 .msg-bubble.mine.continued{border-top-right-radius:4px;}
@@ -2227,7 +2227,7 @@ function closeRegionPage(){
 
 /* ========== TYPING INDICATOR ========== */
 #typingIndicator{
-  padding:0 12px 6px;background:#f0f2f5;flex-shrink:0;
+  padding:0 12px 6px;background:#fff;flex-shrink:0;
   display:none;
 }
 .typing-wrap{
@@ -2253,7 +2253,7 @@ function closeRegionPage(){
 /* ========== ZONE DE SAISIE ========== */
 .msg-input-area{
   display:flex;gap:8px;padding:10px 12px 14px;
-  border-top:1px solid #e4e6eb;flex-shrink:0;
+  border-top:1px solid #ececec;flex-shrink:0;
   background:#fff;align-items:flex-end;
 }
 .msg-input{
