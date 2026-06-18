@@ -63,23 +63,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ groups: groupsWithPreview });
     }
 
-    // ---- PHOTOS des membres d'un groupe ----
-    if (action === 'photos' && req.method === 'GET') {
-      const groupId = req.query.group;
-      if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
-      // Récupérer les messages récents pour connaître les userIds du groupe
-      const messages = await db.getMessages(groupId, 200);
-      const userIds = [...new Set(messages.map(m => m.userId))];
-      // Récupérer les photos en parallèle (seulement id + profile_photo)
-      const users = await Promise.all(userIds.map(id => db.getUserById(id)));
-      const photos = {};
-      for (const u of users) {
-        if (u && u.profilePhoto) photos[u.id] = u.profilePhoto;
-      }
-      return res.status(200).json({ photos });
-    }
-
-    // ---- POLL COMBINÉ messages + typing en 1 aller-retour ----
+    // ---- POLL COMBINÉ messages + typing + photos en 1 aller-retour ----
     if (action === 'poll' && req.method === 'GET') {
       const groupId = req.query.group;
       if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
@@ -87,7 +71,14 @@ module.exports = async (req, res) => {
         db.getMessages(groupId, 80),
         db.getTyping(groupId, user.id)
       ]);
-      return res.status(200).json({ messages, typing });
+      // Récupérer les photos des membres présents dans les messages
+      const userIds = [...new Set(messages.map(m => m.userId))];
+      const members = await Promise.all(userIds.map(id => db.getUserById(id)));
+      const photos = {};
+      for (const u of members) {
+        if (u) photos[u.id] = u.profilePhoto || null;
+      }
+      return res.status(200).json({ messages, typing, photos });
     }
 
     // ---- SEND ----

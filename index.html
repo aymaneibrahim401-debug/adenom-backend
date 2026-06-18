@@ -2543,7 +2543,6 @@ async function openGroup(gid){
   closeMsgSettings();
 
   await pollGroupData();
-  fetchGroupPhotos(currentGroup.id);
   msgPollInterval = setInterval(pollGroupData, 2000);
 }
 
@@ -2571,9 +2570,18 @@ async function pollGroupData(){
     if(!currentGroup || currentGroup.id !== groupIdAtStart) return;
     const msgs = data.messages || [];
     const typing = data.typing || [];
+    const photos = data.photos || {};
+
+    // Mettre à jour le cache photo et détecter les changements
+    let photoChanged = false;
+    for(const [uid, photo] of Object.entries(photos)){
+      const current = getPublicPhoto(uid);
+      if(photo && photo !== current){ saveMyPhotoPublic(uid, photo); photoChanged = true; }
+      else if(!photo && current && uid !== myUserId){ localStorage.removeItem('pubPhoto_' + uid); photoChanged = true; }
+    }
 
     const lastId = msgs.length ? msgs[msgs.length-1].id : null;
-    if(lastId !== _lastMsgId){
+    if(lastId !== _lastMsgId || photoChanged){
       _lastMsgId = lastId;
       _cachedMsgs = msgs;
       renderChatMessages(msgs);
@@ -2686,20 +2694,6 @@ function saveMyPhotoPublic(userId, dataUrl){
 }
 function getPublicPhoto(userId){
   return localStorage.getItem('pubPhoto_' + userId) || localStorage.getItem('profilePhoto_' + userId) || null;
-}
-
-// Charge les photos de tous les membres d'un groupe depuis l'API et les met en cache
-async function fetchGroupPhotos(groupId){
-  try{
-    const data = await apiRequest('/api/messages?action=photos&group=' + groupId);
-    if(!data || !data.photos) return;
-    let hasNew = false;
-    for(const [uid, photo] of Object.entries(data.photos)){
-      if(photo && !getPublicPhoto(uid)){ saveMyPhotoPublic(uid, photo); hasNew = true; }
-    }
-    // Re-afficher les messages si de nouvelles photos ont été chargées
-    if(hasNew && _cachedMsgs && _cachedMsgs.length) renderChatMessages(_cachedMsgs);
-  }catch(e){}
 }
 
 // Avatar avec photo ou initiales
