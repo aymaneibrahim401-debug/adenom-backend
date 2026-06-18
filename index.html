@@ -2543,6 +2543,7 @@ async function openGroup(gid){
   closeMsgSettings();
 
   await pollGroupData();
+  fetchGroupPhotos(currentGroup.id);
   msgPollInterval = setInterval(pollGroupData, 2000);
 }
 
@@ -2685,6 +2686,20 @@ function saveMyPhotoPublic(userId, dataUrl){
 }
 function getPublicPhoto(userId){
   return localStorage.getItem('pubPhoto_' + userId) || localStorage.getItem('profilePhoto_' + userId) || null;
+}
+
+// Charge les photos de tous les membres d'un groupe depuis l'API et les met en cache
+async function fetchGroupPhotos(groupId){
+  try{
+    const data = await apiRequest('/api/messages?action=photos&group=' + groupId);
+    if(!data || !data.photos) return;
+    let hasNew = false;
+    for(const [uid, photo] of Object.entries(data.photos)){
+      if(photo && !getPublicPhoto(uid)){ saveMyPhotoPublic(uid, photo); hasNew = true; }
+    }
+    // Re-afficher les messages si de nouvelles photos ont été chargées
+    if(hasNew && _cachedMsgs && _cachedMsgs.length) renderChatMessages(_cachedMsgs);
+  }catch(e){}
 }
 
 // Avatar avec photo ou initiales
