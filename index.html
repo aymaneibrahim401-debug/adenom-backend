@@ -2015,8 +2015,6 @@ function closeRegionPage(){
   </div>
 </div>
 
-<div id="imgLightbox" onclick="closeLightbox()"><button id="imgLightboxClose" onclick="closeLightbox()">✕</button><img id="lightboxImg" src="" alt=""></div>
-
 <!-- ========== MESSAGERIE GROUPES ========== -->
 <style>
 #msgOverlay{
@@ -2204,6 +2202,24 @@ function closeRegionPage(){
 .msg-bubble.mine.continued{border-top-right-radius:4px;}
 .msg-bubble.last:not(.mine){border-bottom-left-radius:18px;}
 
+/* Bulle photo */
+.msg-bubble-img{
+  max-width:220px;max-height:220px;
+  border-radius:14px;display:block;
+  object-fit:cover;cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,0.15);
+}
+.msg-bubble.mine .msg-bubble-img{ border-radius:14px; }
+
+/* Bouton photo dans la zone de saisie */
+.msg-photo-btn{
+  width:38px;height:38px;background:#f0f2f5;color:#0070ba;border:none;
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:0.15s;font-size:18px;
+}
+.msg-photo-btn:hover{background:#e4e6eb;}
+.msg-photo-btn:active{transform:scale(0.92);}
+
 /* Heure — dans le flux comme Messenger, anime en hauteur */
 .msg-bubble-meta{
   font-size:11px;color:#65676b;
@@ -2265,21 +2281,6 @@ function closeRegionPage(){
   flex-shrink:0;transition:0.15s;box-shadow:0 2px 8px rgba(0,132,255,0.3);
 }
 .msg-send-btn:hover{background:#0070d6;}
-
-.msg-photo-btn{width:38px;height:38px;background:none;color:#65676b;border:none;
-  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.msg-photo-btn:hover{background:#f0f2f5;}
-#msgImgPreviewWrap{padding:6px 12px;display:none;align-items:center;gap:8px;border-top:1px solid #e4e6eb;}
-#msgImgPreview{width:48px;height:48px;object-fit:cover;border-radius:8px;}
-#msgImgRemove{background:#ffeaea;color:#e0334d;border:none;border-radius:50%;
-  width:20px;height:20px;font-size:12px;cursor:pointer;font-weight:700;line-height:20px;}
-.bubble-img{max-width:180px;max-height:200px;border-radius:10px;display:block;margin-top:4px;cursor:pointer;object-fit:cover;}
-#imgLightbox{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:none;align-items:center;justify-content:center;}
-#imgLightbox.show{display:flex;}
-#imgLightbox img{max-width:92vw;max-height:88vh;border-radius:12px;}
-#imgLightboxClose{position:fixed;top:16px;right:16px;background:rgba(255,255,255,0.2);
-  color:#fff;border:none;border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;}
-
 .msg-send-btn:active{transform:scale(0.92);}
 .msg-send-btn svg{width:17px;height:17px;}
 
@@ -2378,12 +2379,9 @@ function closeRegionPage(){
       </div>
       <div class="msg-messages" id="chatMessages"></div>
       <div id="typingIndicator"></div>
-      <input type="file" id="msgImgInput" accept="image/*" style="display:none" onchange="onMsgImgPicked(event)">
-      <div id="msgImgPreviewWrap"><img id="msgImgPreview" src="" alt=""><button id="msgImgRemove" onclick="removeMsgImg()">✕</button><span style="font-size:11px;color:#888">Photo prête</span></div>
       <div class="msg-input-area">
-        <button class="msg-photo-btn" onclick="document.getElementById('msgImgInput').click()">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-        </button>
+        <button class="msg-photo-btn" onclick="document.getElementById('msgPhotoInput').click()" title="Envoyer une photo">📷</button>
+        <input type="file" id="msgPhotoInput" accept="image/*" style="display:none;" onchange="sendPhoto(event)">
         <textarea class="msg-input" id="msgInput" placeholder="Aa" rows="1"
           oninput="onMsgInput()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
@@ -2510,7 +2508,12 @@ async function renderGroupList(){
       }
 
       const preview = g.lastMessage
-        ? escapeHtml(g.lastMessage.senderName.split(' ')[0] + ': ' + g.lastMessage.text.substring(0,42) + (g.lastMessage.text.length>42?'…':''))
+        ? (() => {
+            const sender = escapeHtml(g.lastMessage.senderName.split(' ')[0]);
+            const txt = g.lastMessage.text;
+            if(txt.startsWith('[photo:')) return sender + ': 📷 Photo';
+            return sender + ': ' + escapeHtml(txt.substring(0,42) + (txt.length>42?'…':''));
+          })()
         : '<em>Aucun message</em>';
 
       return `<div class="msg-group-item${hasUnread?' has-unread':''}" onclick="openGroup('${g.id}')">
@@ -2592,18 +2595,14 @@ async function pollGroupData(){
     if(!currentGroup || currentGroup.id !== groupIdAtStart) return;
     const msgs = data.messages || [];
     const typing = data.typing || [];
-    const photos = data.photos || {};
-
-    // Mettre à jour le cache photo et détecter les changements
-    let photoChanged = false;
-    for(const [uid, photo] of Object.entries(photos)){
-      const current = getPublicPhoto(uid);
-      if(photo && photo !== current){ saveMyPhotoPublic(uid, photo); photoChanged = true; }
-      else if(!photo && current && uid !== myUserId){ localStorage.removeItem('pubPhoto_' + uid); photoChanged = true; }
-    }
+    // Mettre en cache les photos de profil des expéditeurs
+    const senderPhotos = data.senderPhotos || {};
+    Object.entries(senderPhotos).forEach(([uid, photo]) => {
+      if(photo) localStorage.setItem('pubPhoto_' + uid, photo);
+    });
 
     const lastId = msgs.length ? msgs[msgs.length-1].id : null;
-    if(lastId !== _lastMsgId || photoChanged){
+    if(lastId !== _lastMsgId){
       _lastMsgId = lastId;
       _cachedMsgs = msgs;
       renderChatMessages(msgs);
@@ -2689,7 +2688,7 @@ function renderChatMessages(msgs){
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
       <div class="msg-bubble-col">
         ${(!isMe && isFirst) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
-        <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">${m.text ? escapeHtml(m.text) : ''}${m.image ? `<img class="bubble-img" src="${m.image}" alt="" onclick="event.stopPropagation();openLightbox('${m.image}')">` : ''}</div>
+        <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">${renderMsgContent(m.text)}</div>
         <div class="msg-bubble-meta">${time}</div>
       </div>
     </div>`;
@@ -2728,6 +2727,81 @@ function getAvatarHtml(userId, displayName){
   return `<div class="msg-avatar-sm" style="background:${colors[colorIdx]};color:#fff;">${initials}</div>`;
 }
 
+// Rendu du contenu d'un message (texte ou image)
+function renderMsgContent(text){
+  if(text && text.startsWith('[photo:')){
+    const dataUrl = text.slice(7, -1); // [photo:DATA]
+    return `<img class="msg-bubble-img" src="${dataUrl}" alt="📷 Photo" onclick="openPhotoFullscreen('${dataUrl.substring(0,30)}...'); event.stopPropagation();" loading="lazy">`;
+  }
+  return escapeHtml(text);
+}
+
+// Envoyer une photo
+async function sendPhoto(event){
+  const file = event.target.files[0];
+  event.target.value = '';
+  if(!file || !currentUser || !currentGroup) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = async function(){
+    // Redimensionner à max 800px
+    const MAX = 800;
+    let w = img.width, h = img.height;
+    if(w > MAX || h > MAX){
+      if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+    URL.revokeObjectURL(url);
+
+    const gid = currentGroup.id;
+    const displayName = getMyDisplayName(gid);
+    const photoText = '[photo:' + dataUrl + ']';
+
+    // Message temporaire
+    const tempMsg = {
+      id: 'temp_' + Date.now(),
+      userId: currentUser.id,
+      senderName: displayName,
+      text: photoText,
+      createdAt: new Date().toISOString()
+    };
+    _cachedMsgs = [...(_cachedMsgs||[]), tempMsg];
+    renderChatMessages(_cachedMsgs);
+
+    try{
+      await apiRequest('/api/messages?action=send',{
+        method:'POST',
+        body:{ groupId: gid, text: photoText, senderName: displayName }
+      });
+      await pollGroupData();
+    }catch(e){
+      alert("Erreur d'envoi de la photo.");
+    }
+  };
+  img.src = url;
+}
+
+// Voir photo en plein écran
+function openPhotoFullscreen(url){
+  // On cherche le vrai src dans les images du chat
+  const imgs = document.querySelectorAll('.msg-bubble-img');
+  for(const img of imgs){
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+    const fullImg = document.createElement('img');
+    fullImg.src = img.src;
+    fullImg.style.cssText = 'max-width:95vw;max-height:95vh;border-radius:8px;object-fit:contain;';
+    overlay.appendChild(fullImg);
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+    break;
+  }
+}
+
 function toggleMsgTime(el){
   const meta = el.nextElementSibling;
   if(!meta || !meta.classList.contains('msg-bubble-meta')) return;
@@ -2755,48 +2829,11 @@ function onMsgInput(){
 }
 
 // ---- ENVOI ----
-
-let msgImgData = null;
-function onMsgImgPicked(e){
-  const file = e.target.files[0]; if(!file) return;
-  if(file.size > 10*1024*1024){ alert('Image trop lourde (max 10MB).'); e.target.value=''; return; }
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = function(){
-    const MAX = 1200;
-    let w = img.width, h = img.height;
-    if(w > MAX || h > MAX){
-      if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-      else { w = Math.round(w * MAX / h); h = MAX; }
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    // Compression progressive jusqu'à passer sous 800KB en base64 (~600KB image)
-    let quality = 0.82;
-    let data = canvas.toDataURL('image/jpeg', quality);
-    while(data.length > 800000 && quality > 0.3){
-      quality -= 0.1;
-      data = canvas.toDataURL('image/jpeg', quality);
-    }
-    URL.revokeObjectURL(url);
-    msgImgData = data;
-    document.getElementById('msgImgPreview').src = data;
-    document.getElementById('msgImgPreviewWrap').style.display = 'flex';
-  };
-  img.onerror = function(){ URL.revokeObjectURL(url); alert('Impossible de lire cette image.'); };
-  img.src = url;
-  e.target.value = '';
-}
-function removeMsgImg(){ msgImgData = null; document.getElementById('msgImgPreviewWrap').style.display = 'none'; document.getElementById('msgImgPreview').src = ''; }
-function openLightbox(src){ document.getElementById('lightboxImg').src = src; document.getElementById('imgLightbox').classList.add('show'); }
-function closeLightbox(){ document.getElementById('imgLightbox').classList.remove('show'); }
 async function sendMsg(){
   if(!currentUser||!currentGroup) return;
   const input = document.getElementById('msgInput');
   const rawText = input.value.trim();
-  const imageToSend = msgImgData;
-  if(!rawText && !imageToSend) return;
+  if(!rawText) return;
 
   // Utiliser le pseudo si défini
   const gid = currentGroup.id;
@@ -2804,14 +2841,12 @@ async function sendMsg(){
 
   input.value = '';
   input.style.height = 'auto';
-  if(imageToSend) removeMsgImg();
 
   const tempMsg = {
     id: 'temp_' + Date.now(),
     userId: currentUser.id,
     senderName: displayName,
     text: rawText,
-    image: imageToSend || null,
     createdAt: new Date().toISOString()
   };
   _cachedMsgs = [...(_cachedMsgs||[]), tempMsg];
@@ -2821,7 +2856,7 @@ async function sendMsg(){
     // Envoyer avec senderName = pseudo (ou nom réel)
     await apiRequest('/api/messages?action=send',{
       method:'POST',
-      body:{ groupId: gid, text: rawText, senderName: displayName, image: imageToSend || null }
+      body:{ groupId: gid, text: rawText, senderName: displayName }
     });
     await pollGroupData();
   }catch(e){
@@ -2912,79 +2947,6 @@ function savePseudo(){
 
 async function loadAndRenderMessages(){
   await pollGroupData();
-}
-
-// ========== ACTUALITÉS — DASHBOARD MEMBRE ==========
-async function openMemberDashboard(){
-  // Mettre à jour le nom de bienvenue
-  const nameEl = document.getElementById('dashName');
-  if(nameEl && currentUser){
-    nameEl.textContent = 'Bonjour ' + (currentUser.pseudo || currentUser.firstName || '') + ' !';
-  }
-  // Afficher l'overlay
-  const overlay = document.getElementById('memberDashOverlay');
-  if(overlay) overlay.classList.add('show');
-  // Charger les actualités
-  await loadActuList();
-}
-
-function closeMemberDashboard(){
-  const overlay = document.getElementById('memberDashOverlay');
-  if(overlay) overlay.classList.remove('show');
-}
-
-function closeMemberDashOnOverlay(e){
-  if(e.target === document.getElementById('memberDashOverlay')){
-    closeMemberDashboard();
-  }
-}
-
-async function postActu(){
-  const title = document.getElementById('actuTitle').value.trim();
-  const text = document.getElementById('actuInput').value.trim();
-  const tag = document.getElementById('actuTag').value;
-  if(!title && !text){ alert('Ajoutez un titre ou un texte.'); return; }
-  try{
-    const res = await fetch('/api/messages?action=actu-post', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ tag, title, text })
-    });
-    if(!res.ok){ alert('Erreur lors de la publication.'); return; }
-    document.getElementById('actuTitle').value = '';
-    document.getElementById('actuInput').value = '';
-    await loadActuList();
-  }catch(e){ alert('Erreur réseau.'); }
-}
-
-async function loadActuList(){
-  const el = document.getElementById('actuList');
-  if(!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Chargement...</div>';
-  try{
-    const res = await fetch('/api/messages?action=actu-list');
-    const data = await res.json();
-    const list = data.actualities || [];
-    if(!list.length){
-      el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>';
-      return;
-    }
-    el.innerHTML = list.map(a => {
-      const date = new Date(a.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-      const tagLabel = a.tag==='info' ? 'ℹ️ Info' : a.tag==='event' ? '📅 Événement' : '🚨 Urgent';
-      return `<div class="actu-card" style="background:#fff;border-radius:14px;margin:0 16px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);overflow:hidden;">
-        ${a.image ? `<img src="${a.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;">` : ''}
-        <div class="actu-body">
-          <span class="actu-tag ${a.tag}">${tagLabel}</span>
-          ${a.title ? `<div class="actu-title-text">${a.title}</div>` : ''}
-          ${a.text ? `<div class="actu-text">${a.text}</div>` : ''}
-          <div class="actu-date">🕐 ${date}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:#e0334d;font-size:13px;">Erreur de chargement.</div>';
-  }
 }
 </script>
 

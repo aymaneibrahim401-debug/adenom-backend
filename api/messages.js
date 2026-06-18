@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ groups: groupsWithPreview });
     }
 
-    // ---- POLL COMBINÉ messages + typing + photos en 1 aller-retour ----
+    // ---- POLL COMBINÉ messages + typing en 1 aller-retour ----
     if (action === 'poll' && req.method === 'GET') {
       const groupId = req.query.group;
       if (!groupId || !canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
@@ -71,31 +71,28 @@ module.exports = async (req, res) => {
         db.getMessages(groupId, 80),
         db.getTyping(groupId, user.id)
       ]);
-      // Récupérer les photos des membres présents dans les messages
-      const userIds = [...new Set(messages.map(m => m.userId))];
-      const members = await Promise.all(userIds.map(id => db.getUserById(id)));
-      const photos = {};
-      for (const u of members) {
-        if (u) photos[u.id] = u.profilePhoto || null;
-      }
-      return res.status(200).json({ messages, typing, photos });
+      // Récupérer les photos de profil des expéditeurs uniques
+      const senderIds = [...new Set(messages.map(m => m.userId))];
+      const senderPhotos = {};
+      await Promise.all(senderIds.map(async id => {
+        const u = await db.getUserById(id);
+        if (u && u.profilePhoto) senderPhotos[id] = u.profilePhoto;
+      }));
+      return res.status(200).json({ messages, typing, senderPhotos });
     }
 
     // ---- SEND ----
     if (action === 'send' && req.method === 'POST') {
       const groupId = body.groupId;
       const text = (body.text || '').trim().slice(0, 2000);
-      const image = body.image || null;
-      if (!groupId || (!text && !image)) return res.status(400).json({ error: 'groupId et text ou image requis.' });
-      // En base64, 4 chars = 3 octets → taille réelle ≈ length * 0.75
-      if (image && image.length * 0.75 > 1.2 * 1024 * 1024) return res.status(400).json({ error: 'Image trop lourde (max ~1MB compressée).' });
+      if (!groupId || !text) return res.status(400).json({ error: 'groupId et text requis.' });
       if (!canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
 
       const msg = {
         id: randomUUID(), groupId,
         userId: user.id,
         senderName: `${user.firstName} ${user.lastName}`.trim(),
-        text, image: image || null, createdAt: new Date().toISOString()
+        text, createdAt: new Date().toISOString()
       };
       await db.createMessage(msg);
       return res.status(200).json({ message: msg });
