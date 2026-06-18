@@ -753,10 +753,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         </div>
       </div>
       <!-- Notification statut -->
-      <div class="profile-notif" id="profileNotif" style="display:none;">
-        <span id="profileNotifIcon">⏳</span>
-        <span id="profileNotifText"></span>
-      </div>
+
       <div class="profile-menu-status" id="emailVerifyBanner" style="display:none; background:#fff7e6;">
         <span class="profile-menu-icon">✉️</span>
         <div>
@@ -1537,9 +1534,7 @@ function updateAccountUI(){
   const memberBanner = document.getElementById('memberBanner');
   const nameEl = document.getElementById('profileMenuName');
   const subtitleEl = document.getElementById('profileMenuSubtitle');
-  const notif = document.getElementById('profileNotif');
-  const notifIcon = document.getElementById('profileNotifIcon');
-  const notifText = document.getElementById('profileNotifText');
+
   const dot = document.querySelector('.profile-bubble-dot');
   const heroCta = document.getElementById('heroCta');
 
@@ -1562,15 +1557,11 @@ function updateAccountUI(){
     if(currentUser.accountStatus === 'pending'){
       if(subtitleEl) subtitleEl.textContent = 'Demande en attente';
       if(notif){ notif.style.display='flex'; notif.className='profile-notif pending'; }
-      if(notifIcon) notifIcon.textContent = '⏳';
-      if(notifText) notifText.textContent = 'Votre demande d\'adhésion est en cours de validation par l\'administrateur.';
       if(dot) dot.style.background = '#f5a623';
       if(heroCta) heroCta.style.display = 'none';
     } else if(currentUser.accountStatus === 'member'){
       if(subtitleEl) subtitleEl.textContent = 'Membre ADENOM ✅';
       if(notif){ notif.style.display='flex'; notif.className='profile-notif member'; }
-      if(notifIcon) notifIcon.textContent = '🎉';
-      if(notifText) notifText.textContent = 'Votre adhésion a été validée. Bienvenue dans la communauté ADENOM !';
       addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
       if(dot) dot.style.background = '#2ecc71';
       const mnl = document.getElementById('memberNavLinks');
