@@ -1555,13 +1555,11 @@ function updateAccountUI(){
     loadProfilePhoto();
 
     if(currentUser.accountStatus === 'pending'){
-      if(subtitleEl) subtitleEl.textContent = 'Demande en attente';
-      if(notif){ notif.style.display='flex'; notif.className='profile-notif pending'; }
+      if(subtitleEl) subtitleEl.textContent = 'Demande en attente ⏳';
       if(dot) dot.style.background = '#f5a623';
       if(heroCta) heroCta.style.display = 'none';
     } else if(currentUser.accountStatus === 'member'){
       if(subtitleEl) subtitleEl.textContent = 'Membre ADENOM ✅';
-      if(notif){ notif.style.display='flex'; notif.className='profile-notif member'; }
       addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
       if(dot) dot.style.background = '#2ecc71';
       const mnl = document.getElementById('memberNavLinks');
@@ -1569,7 +1567,6 @@ function updateAccountUI(){
       if(heroCta) heroCta.style.display = 'none';
     } else {
       if(subtitleEl) subtitleEl.textContent = 'Compte actif';
-      if(notif) notif.style.display = 'none';
       if(dot) dot.style.background = '#0070ba';
       if(heroCta) heroCta.style.display = '';
     }
@@ -3497,5 +3494,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>
-Jeu 18 jui 2026 23:49:46 EAT
+</html>Jeu 18 jui 2026 23:51:47 EAT
