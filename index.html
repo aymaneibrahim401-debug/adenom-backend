@@ -2148,15 +2148,14 @@ function closeRegionPage(){
   align-items:flex-end;
   gap:6px;
   margin-bottom:2px;
+  max-width:75%;
 }
 .msg-bubble-wrap.mine{
   flex-direction:row-reverse;
   align-self:flex-end;
-  max-width:75%;
 }
 .msg-bubble-wrap:not(.mine){
   align-self:flex-start;
-  max-width:75%;
 }
 /* Même expéditeur consécutif : avatar invisible */
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
@@ -2175,11 +2174,11 @@ function closeRegionPage(){
 
 /* Colonne texte */
 .msg-bubble-col{
-  display:flex;flex-direction:column;
-  min-width:0;
-  align-items:flex-start;
+  display:inline-flex;flex-direction:column;
+  min-width:0;max-width:100%;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
+.msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
 
 .msg-sender{
   font-size:12px;font-weight:700;color:#1a73e8;
@@ -2192,7 +2191,7 @@ function closeRegionPage(){
   border-radius:18px;
   font-size:14px;line-height:1.45;
   word-break:break-word;white-space:pre-wrap;
-  display:block;
+  display:inline-block;
   max-width:100%;
   background:#e8f0fe;color:#1a1a1a;
   border-bottom-left-radius:4px;
