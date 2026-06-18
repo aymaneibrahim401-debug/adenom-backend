@@ -767,6 +767,7 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
       <div class="profile-menu-member-nav" id="memberNavLinks" style="display:none;">
         <a href="#" onclick="openMemberDashboard();closeProfileMenu();return false;">📰 Actualités</a>
         <a href="#" onclick="openMessaging();closeProfileMenu();return false;">💬 Messagerie groupes</a>
+        <a href="#" onclick="openNotifPage();closeProfileMenu();return false;">🔔 Notifications <span id="menuNotifBadge" style="background:#e0334d;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;display:none;"></span></a>
       </div>
       <div class="profile-menu-nav">
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
@@ -1543,7 +1544,7 @@ function updateAccountUI(){
   const heroCta = document.getElementById('heroCta');
 
   const isLoggedIn = !!currentUser;
-  if(isLoggedIn) renderNotifBadge();
+  if(isLoggedIn){ renderNotifBadge(); updateMenuNotifBadge(); }
 
   if(isLoggedIn){
     if(btnLogin) btnLogin.style.display = 'none';
@@ -2869,13 +2870,11 @@ function renderNotifBadge(){
   const notifs = getNotifs();
   const unread = notifs.filter(n => !n.read).length;
   const badge = document.getElementById('notifBadge');
-  if(!badge) return;
-  if(unread > 0){
-    badge.textContent = unread > 99 ? '99+' : unread;
-    badge.classList.add('show');
-  } else {
-    badge.classList.remove('show');
+  if(badge){
+    if(unread > 0){ badge.textContent = unread > 99 ? '99+' : unread; badge.classList.add('show'); }
+    else { badge.classList.remove('show'); }
   }
+  updateMenuNotifBadge();
 }
 function renderNotifList(){
   const el = document.getElementById('notifList');
@@ -2917,6 +2916,85 @@ function clearAllNotifs(){
   renderNotifBadge();
   renderNotifList();
 }
+function openNotifPage(){
+  // Fermer tous les autres panneaux ouverts
+  closeProfileMenu && closeProfileMenu();
+  // Créer/afficher la page notifications
+  let page = document.getElementById('notifPage');
+  if(!page){
+    page = document.createElement('div');
+    page.id = 'notifPage';
+    page.style.cssText = 'position:fixed;inset:0;background:#f0f2f5;z-index:3400;display:flex;flex-direction:column;';
+    page.innerHTML = `
+      <div style="background:linear-gradient(135deg,#003087,#0070ba);padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <button onclick="document.getElementById('notifPage').style.display='none'" style="background:rgba(255,255,255,0.18);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;">‹</button>
+        <span style="color:#fff;font-size:17px;font-weight:800;">🔔 Notifications</span>
+        <button onclick="clearAllNotifs();renderNotifPage();" style="margin-left:auto;background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">Tout effacer</button>
+      </div>
+      <div id="notifPageList" style="flex:1;overflow-y:auto;padding:8px 0;"></div>
+    `;
+    document.body.appendChild(page);
+  } else {
+    page.style.display = 'flex';
+  }
+  renderNotifPage();
+}
+
+function renderNotifPage(){
+  const el = document.getElementById('notifPageList');
+  if(!el) return;
+  const notifs = getNotifs();
+  // Marquer tout comme lu
+  notifs.forEach(n => n.read = true);
+  saveNotifs(notifs);
+  renderNotifBadge();
+  updateMenuNotifBadge();
+  if(!notifs.length){
+    el.innerHTML = '<div style="text-align:center;padding:48px 16px;color:#65676b;font-size:14px;">Aucune notification pour le moment.</div>';
+    return;
+  }
+  const icons = { msg:'💬', actu:'📢', system:'✅', welcome:'🎉' };
+  el.innerHTML = notifs.map(n => {
+    const d = new Date(n.ts);
+    const now = new Date();
+    const diffMin = Math.floor((now - d)/60000);
+    let timeStr;
+    if(diffMin < 1) timeStr = "À l'instant";
+    else if(diffMin < 60) timeStr = `Il y a ${diffMin} min`;
+    else if(diffMin < 1440) timeStr = `Il y a ${Math.floor(diffMin/60)}h`;
+    else timeStr = d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    return `<div onclick="clickNotifPage(${n.id})" style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:#fff;margin:4px 10px;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;">
+      <div style="width:44px;height:44px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${icons[n.type]||'🔔'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;color:#050505;margin-bottom:3px;">${escapeHtml(n.title)}</div>
+        <div style="font-size:13px;color:#65676b;line-height:1.4;">${escapeHtml(n.sub||'')}</div>
+        <div style="font-size:11px;color:#b0b3b8;margin-top:4px;">${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clickNotifPage(id){
+  const notifs = getNotifs();
+  const n = notifs.find(x => x.id === id);
+  if(n && n.action === 'messaging'){
+    document.getElementById('notifPage').style.display = 'none';
+    openMessaging();
+  }
+  if(n && n.action === 'actu'){
+    document.getElementById('notifPage').style.display = 'none';
+    openMemberDashboard();
+  }
+}
+
+function updateMenuNotifBadge(){
+  const badge = document.getElementById('menuNotifBadge');
+  if(!badge) return;
+  const unread = getNotifs().filter(n => !n.read).length;
+  if(unread > 0){ badge.textContent = unread; badge.style.display = 'inline'; }
+  else { badge.style.display = 'none'; }
+}
+
 function toggleNotifPanel(){
   const panel = document.getElementById('notifPanel');
   if(panel.classList.contains('open')){
