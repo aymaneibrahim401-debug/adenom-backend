@@ -2100,7 +2100,7 @@ function closeRegionPage(){
 .msg-messages{
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:10px 12px 6px;
-  display:flex;flex-direction:column;gap:3px;
+  display:flex;flex-direction:column;gap:2px;
   background:#f0f2f5;min-height:0;
   align-items:stretch;
 }
@@ -2113,17 +2113,21 @@ function closeRegionPage(){
 }
 .msg-date-sep::before,.msg-date-sep::after{content:'';flex:1;height:1px;background:#d8dadf;}
 
-/* Wrap bulle */
+/* ===== BULLES — layout propre ===== */
+
+/* Wrap : conteneur pleine largeur, items collés à gauche par défaut */
 .msg-bubble-wrap{
-  display:flex;align-items:flex-end;gap:6px;
-  width:100%;margin:1px 0;
-  justify-content:flex-start;
+  display:flex;
+  align-items:flex-end;
+  gap:6px;
+  width:100%;
+  margin:0;
 }
+/* Mes messages : on inverse l'ordre (avatar à droite, bulle à gauche de l'avatar) */
 .msg-bubble-wrap.mine{
   flex-direction:row-reverse;
-  justify-content:flex-start;
 }
-/* Regroupement : pas d'avatar si même expéditeur que le message suivant */
+/* Avatar caché si même expéditeur consécutif */
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
 
 /* Avatar */
@@ -2135,31 +2139,31 @@ function closeRegionPage(){
 }
 .msg-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 
-/* Colonne texte */
+/* Colonne texte : limiter à 72% de la largeur totale */
 .msg-bubble-col{
-  display:flex;flex-direction:column;
-  max-width:75%;min-width:0;
+  display:flex;
+  flex-direction:column;
+  max-width:72%;
+  min-width:0;
 }
-.msg-bubble-wrap.mine .msg-bubble-col{align-items:flex-end;}
-.msg-bubble-wrap:not(.mine) .msg-bubble-col{align-items:flex-start;}
+.msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
+.msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
 
 .msg-sender{
   font-size:11px;font-weight:700;color:#0070ba;
-  margin-bottom:2px;padding:0 12px;
+  margin-bottom:2px;padding:0 4px;
 }
 
-/* Bulle principale */
+/* Bulle : s'adapte au texte, jamais plus large que la colonne */
 .msg-bubble{
-  padding:9px 14px;
+  padding:9px 13px;
   border-radius:18px;
   font-size:14px;line-height:1.5;
   word-break:break-word;white-space:pre-wrap;
-  display:inline-block;
-  max-width:260px;
+  display:inline;
   background:#fff;color:#050505;
   border-bottom-left-radius:4px;
   box-shadow:0 1px 2px rgba(0,0,0,0.08);
-  box-sizing:border-box;
 }
 .msg-bubble.mine{
   background:#0084ff;color:#fff;
@@ -2608,12 +2612,14 @@ function renderChatMessages(msgs){
     let wrapClasses = 'msg-bubble-wrap';
     if(isMe) wrapClasses += ' mine';
     if(sameAsNext) wrapClasses += ' grouped';
+    // Petit espace quand l'expéditeur change
+    const topMargin = (!sameAsPrev && i > 0) ? 'margin-top:6px;' : '';
 
-    html += `<div class="${wrapClasses}">
+    html += `<div class="${wrapClasses}" style="${topMargin}">
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
       <div class="msg-bubble-col">
         ${(!isMe && !sameAsPrev) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
-        <div class="${bubbleClasses}">${escapeHtml(m.text)}</div>
+        <div style="display:block"><span class="${bubbleClasses}">${escapeHtml(m.text)}</span></div>
         <div class="msg-bubble-meta">${time}</div>
       </div>
     </div>`;
