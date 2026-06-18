@@ -2132,6 +2132,7 @@ function closeRegionPage(){
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
 /* Changement d'expéditeur : petit espace */
 .msg-bubble-wrap.new-sender{ margin-top:8px; }
+.msg-bubble-wrap:not(.new-sender):not(:first-child){ margin-bottom:1px; }
 
 /* Avatar */
 .msg-avatar-sm{
@@ -2628,7 +2629,7 @@ function renderChatMessages(msgs){
     let wrapClasses = 'msg-bubble-wrap';
     if(isMe) wrapClasses += ' mine';
     if(!isLast) wrapClasses += ' grouped';       // avatar caché si pas le dernier du groupe
-    if(!isFirst) wrapClasses += ' new-sender';   // petit espace au-dessus du premier
+    if(isFirst && i < items.length - 1) wrapClasses += ' new-sender'; // espace avant le 1er d'un groupe
 
     html += `<div class="${wrapClasses}">
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
