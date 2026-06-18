@@ -85,16 +85,14 @@ module.exports = async (req, res) => {
     if (action === 'send' && req.method === 'POST') {
       const groupId = body.groupId;
       const text = (body.text || '').trim().slice(0, 2000);
-      const image = body.image || null;
-      if (!groupId || (!text && !image)) return res.status(400).json({ error: 'groupId et text ou image requis.' });
-      if (image && image.length > 3 * 1024 * 1024) return res.status(400).json({ error: 'Image trop lourde (max 2MB).' });
+      if (!groupId || !text) return res.status(400).json({ error: 'groupId et text requis.' });
       if (!canAccessGroup(groupId, user)) return res.status(403).json({ error: 'Accès refusé.' });
 
       const msg = {
         id: randomUUID(), groupId,
         userId: user.id,
         senderName: `${user.firstName} ${user.lastName}`.trim(),
-        text, image: image || null, createdAt: new Date().toISOString()
+        text, createdAt: new Date().toISOString()
       };
       await db.createMessage(msg);
       return res.status(200).json({ message: msg });
