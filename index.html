@@ -2129,7 +2129,7 @@ function closeRegionPage(){
   flex:1;overflow-y:auto;overflow-x:hidden;
   padding:8px 10px 4px;
   display:flex;flex-direction:column-reverse;
-  background:#f0f2f5;min-height:0;
+  background:#e8edf2;min-height:0;
 }
 
 /* Séparateur de date */
@@ -2173,8 +2173,8 @@ function closeRegionPage(){
 
 /* Colonne texte */
 .msg-bubble-col{
-  display:flex;flex-direction:column;
-  min-width:0;flex:1;
+  display:inline-flex;flex-direction:column;
+  min-width:0;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
@@ -2192,9 +2192,9 @@ function closeRegionPage(){
   word-break:break-word;white-space:pre-wrap;
   display:inline-block;
   max-width:100%;
-  background:#fff;color:#050505;
+  background:#1e90ff;color:#fff;
   border-bottom-left-radius:4px;
-  box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  box-shadow:none;
   cursor:pointer;
 }
 .msg-bubble.mine{
