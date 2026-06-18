@@ -2592,47 +2592,53 @@ function renderChatMessages(msgs){
   // visuellement ils apparaissent dans l'ordre chronologique, dernier en bas
   let html = '';
   let lastDate = '';
-  const reversed = [...msgs].reverse();
-  for(let i = 0; i < reversed.length; i++){
-    const m = reversed[i];
+  // On travaille sur msgs (ordre chrono) pour calculer les groupes,
+  // puis on génère le HTML en ordre inverse (column-reverse affiche du bas vers le haut)
+  // isFirst = premier message du groupe = le plus ancien (msgs[i-1] différent ou absent)
+  // isLast  = dernier message du groupe  = le plus récent (msgs[i+1] différent ou absent)
+  const items = msgs.map((m, i) => {
+    const prev = msgs[i-1];
+    const next = msgs[i+1];
+    const isFirst = !prev || prev.userId !== m.userId; // premier du groupe chrono
+    const isLast  = !next || next.userId !== m.userId; // dernier du groupe chrono
+    const changesDate = i === 0 || new Date(m.createdAt).toDateString() !== new Date(msgs[i-1].createdAt).toDateString();
+    return { m, isFirst, isLast, changesDate };
+  });
+
+  // Générer en ordre inverse pour column-reverse
+  for(let i = items.length - 1; i >= 0; i--){
+    const { m, isFirst, isLast, changesDate } = items[i];
     const isMe = myId.length > 0 && String(m.userId) === myId;
-    // Dans l'ordre inversé, "prev" est le message plus récent, "next" est le plus ancien
-    const prev = reversed[i-1]; // plus récent
-    const next = reversed[i+1]; // plus ancien
-    const sameAsPrev = prev && prev.userId === m.userId;
-    const sameAsNext = next && next.userId === m.userId;
-
-    // Séparateur de date (dans l'ordre inversé, on le met APRÈS le groupe)
-    const msgDate = new Date(m.createdAt).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-    if(msgDate !== lastDate){
-      if(lastDate !== '') html += `<div class="msg-date-sep"><span>${lastDate}</span></div>`;
-      lastDate = msgDate;
-    }
-
     const time = new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     const displayName = getDisplayNameForMsg(m, gid);
 
+    // Séparateur de date : on l'insère avant le premier message du jour (en ordre inversé = après)
+    if(changesDate){
+      const dateStr = new Date(m.createdAt).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      html += `<div class="msg-date-sep"><span>${dateStr}</span></div>`;
+    }
+
+    // Classes bulle
     let bubbleClasses = 'msg-bubble';
     if(isMe) bubbleClasses += ' mine';
-    if(sameAsPrev) bubbleClasses += ' continued';
-    if(!sameAsNext) bubbleClasses += ' last';
+    if(!isFirst) bubbleClasses += ' continued'; // pas le premier → coins aplatis en haut
+    if(isLast)   bubbleClasses += ' last';       // dernier → coin bas arrondi
 
+    // Classes wrap
     let wrapClasses = 'msg-bubble-wrap';
     if(isMe) wrapClasses += ' mine';
-    if(sameAsPrev) wrapClasses += ' grouped';
-    if(!sameAsPrev && i > 0) wrapClasses += ' new-sender';
+    if(!isLast) wrapClasses += ' grouped';       // avatar caché si pas le dernier du groupe
+    if(!isFirst) wrapClasses += ' new-sender';   // petit espace au-dessus du premier
 
     html += `<div class="${wrapClasses}">
       ${!isMe ? getAvatarHtml(m.userId, displayName) : ''}
       <div class="msg-bubble-col">
-        ${(!isMe && !sameAsPrev) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
+        ${(!isMe && isFirst) ? `<div class="msg-sender">${escapeHtml(displayName)}</div>` : ''}
         <div class="${bubbleClasses}" onclick="toggleMsgTime(this)">${escapeHtml(m.text)}</div>
         <div class="msg-bubble-meta">${time}</div>
       </div>
     </div>`;
   }
-  // Dernier séparateur de date
-  if(lastDate) html += `<div class="msg-date-sep"><span>${lastDate}</span></div>`;
   el.innerHTML = html;
   // Pas besoin de scroll JS : flex-direction:column-reverse
   // maintient automatiquement le scroll en bas (= messages récents visibles)
