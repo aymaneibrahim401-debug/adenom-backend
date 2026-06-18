@@ -2148,14 +2148,14 @@ function closeRegionPage(){
   align-items:flex-end;
   gap:6px;
   margin-bottom:2px;
-  width:100%;
+  max-width:80%;
 }
 .msg-bubble-wrap.mine{
   flex-direction:row-reverse;
-  justify-content:flex-start;
+  align-self:flex-end;
 }
 .msg-bubble-wrap:not(.mine){
-  justify-content:flex-start;
+  align-self:flex-start;
 }
 /* Même expéditeur consécutif : avatar invisible */
 .msg-bubble-wrap.grouped .msg-avatar-sm{visibility:hidden;}
@@ -2176,7 +2176,6 @@ function closeRegionPage(){
 .msg-bubble-col{
   display:flex;flex-direction:column;
   min-width:0;
-  max-width:78vw;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{ align-items:flex-end; }
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{ align-items:flex-start; }
