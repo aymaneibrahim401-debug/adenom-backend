@@ -2511,10 +2511,16 @@ async function renderGroupList(){
 
       const preview = g.lastMessage
         ? (() => {
-            const sender = escapeHtml(g.lastMessage.senderName);
             const txt = g.lastMessage.text || '';
-            if(txt.startsWith('[photo:')) return `${sender} a envoyé une photo 📷`;
-            return escapeHtml(sender.split(' ')[0] + ': ' + txt.substring(0,42) + (txt.length>42?'…':''));
+            const isMe = currentUser && g.lastMessage.userId && String(g.lastMessage.userId) === String(currentUser.id);
+            const sender = escapeHtml(g.lastMessage.senderName);
+            if(txt.startsWith('[photo:')) {
+              return isMe ? 'Vous avez envoyé une photo 📷' : `${sender} a envoyé une photo 📷`;
+            }
+            const preview = txt.substring(0,42) + (txt.length>42?'…':'');
+            return isMe
+              ? 'Vous : ' + escapeHtml(preview)
+              : escapeHtml(sender.split(' ')[0] + ' : ' + preview);
           })()
         : '<em>Aucun message</em>';
 
