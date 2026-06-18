@@ -2178,15 +2178,21 @@ function closeRegionPage(){
 .msg-bubble.mine.continued{border-top-right-radius:4px;}
 .msg-bubble.last:not(.mine){border-bottom-left-radius:18px;}
 
-/* Heure — apparaît au tap/clic sur la bulle */
+/* Heure — dans le flux comme Messenger, anime en hauteur */
 .msg-bubble-meta{
-  font-size:10px;color:#65676b;
-  margin-top:2px;padding:0 4px;
-  max-height:0;overflow:hidden;
-  transition:max-height 0.2s ease;
+  font-size:11px;color:#65676b;
+  padding:0 4px;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transition:max-height 0.22s ease, opacity 0.18s ease;
 }
-.msg-bubble-meta.visible{ max-height:20px; }
+.msg-bubble-meta.visible{
+  max-height:22px;
+  opacity:1;
+}
 .msg-bubble-wrap.mine .msg-bubble-meta{text-align:right;}
+.msg-bubble-wrap:not(.mine) .msg-bubble-meta{text-align:left;}
 
 /* ========== TYPING INDICATOR ========== */
 #typingIndicator{
@@ -2666,12 +2672,12 @@ function getAvatarHtml(userId, displayName){
 
 function toggleMsgTime(el){
   const meta = el.nextElementSibling;
-  if(!meta) return;
-  // Fermer tous les autres
-  document.querySelectorAll('.msg-bubble-meta.visible').forEach(m => {
-    if(m !== meta) m.classList.remove('visible');
-  });
-  meta.classList.toggle('visible');
+  if(!meta || !meta.classList.contains('msg-bubble-meta')) return;
+  const isVisible = meta.classList.contains('visible');
+  // Fermer tous les autres d'abord
+  document.querySelectorAll('.msg-bubble-meta.visible').forEach(m => m.classList.remove('visible'));
+  // Si ce n'était pas déjà ouvert, l'ouvrir
+  if(!isVisible) meta.classList.add('visible');
 }
 
 function escapeHtml(str){
