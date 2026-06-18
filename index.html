@@ -1520,6 +1520,7 @@ function handleProfilePhoto(event){
   reader.onload = function(e){
     const data = e.target.result;
     localStorage.setItem('profilePhoto_' + currentUser.id, data);
+    saveMyPhotoPublic(currentUser.id, data);
     showProfilePhoto(data);
   };
   reader.readAsDataURL(file);
@@ -2138,7 +2139,7 @@ function closeRegionPage(){
 /* Colonne texte */
 .msg-bubble-col{
   display:flex;flex-direction:column;
-  max-width:72%;min-width:0;
+  max-width:78%;min-width:0;
 }
 .msg-bubble-wrap.mine .msg-bubble-col{align-items:flex-end;}
 .msg-bubble-wrap:not(.mine) .msg-bubble-col{align-items:flex-start;}
@@ -2150,14 +2151,15 @@ function closeRegionPage(){
 
 /* Bulle principale */
 .msg-bubble{
-  padding:8px 12px;
+  padding:8px 14px;
   border-radius:18px;
-  font-size:14px;line-height:1.45;
+  font-size:14px;line-height:1.5;
   word-break:break-word;white-space:pre-wrap;
-  display:inline-block;max-width:100%;
+  display:inline-block;max-width:100%;min-width:48px;
   background:#fff;color:#050505;
   border-bottom-left-radius:4px;
   box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  box-sizing:border-box;
 }
 .msg-bubble.mine{
   background:#0084ff;color:#fff;
@@ -2482,6 +2484,7 @@ async function openGroup(gid){
 
   _lastMsgId = null;
   _cachedMsgs = [];
+  _firstLoad = true;
   const chatEl = document.getElementById('chatMessages');
   if(chatEl) chatEl.innerHTML = '<p style="text-align:center;color:#65676b;padding:24px;font-size:13px;">Chargement...</p>';
   const typingEl = document.getElementById('typingIndicator');
@@ -2522,6 +2525,7 @@ function stopMsgPoll(){
 }
 
 let _lastMsgId = null;
+let _firstLoad = true;
 async function pollGroupData(){
   if(!currentGroup) return;
   const groupIdAtStart = currentGroup.id;
@@ -2614,10 +2618,14 @@ function renderChatMessages(msgs){
       </div>
     </div>`;
   }
+  const wasAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   el.innerHTML = html;
 
-  const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-  if(isNearBottom) el.scrollTop = el.scrollHeight;
+  // Premier chargement OU utilisateur déjà en bas → scroller jusqu'au dernier message
+  if(wasAtBottom || _firstLoad){
+    _firstLoad = false;
+    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+  }
 }
 
 // Retourne le nom affiché d'un message (pseudo si dispo)
@@ -2629,15 +2637,21 @@ function getDisplayNameForMsg(msg, gid){
   return msg.senderName;
 }
 
+// ---- Cache photos de profil (partagé entre tous les onglets via localStorage) ----
+// Quand un utilisateur upload sa photo, on la stocke aussi sous une clé publique
+// que les autres peuvent lire. Clé : 'pubPhoto_<userId>'
+function saveMyPhotoPublic(userId, dataUrl){
+  try{ localStorage.setItem('pubPhoto_' + userId, dataUrl); }catch(e){}
+}
+function getPublicPhoto(userId){
+  return localStorage.getItem('pubPhoto_' + userId) || localStorage.getItem('profilePhoto_' + userId) || null;
+}
+
 // Avatar avec photo ou initiales
 function getAvatarHtml(userId, displayName){
-  // Photo du currentUser si c'est lui (ne devrait pas arriver côté "mine", mais sécurité)
-  if(currentUser && String(userId) === String(currentUser.id)){
-    const photo = localStorage.getItem('profilePhoto_' + currentUser.id);
-    if(photo) return `<div class="msg-avatar-sm"><img src="${photo}" alt=""></div>`;
-  }
+  const photo = getPublicPhoto(String(userId));
+  if(photo) return `<div class="msg-avatar-sm"><img src="${photo}" alt="" onerror="this.parentElement.innerHTML='${((displayName||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase())}'"></div>`;
   const initials = (displayName||'?').split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
-  // Couleur déterministe selon le userId
   const colors = ['#0070ba','#e05c2a','#7b2fff','#31a24c','#e04080','#2a7ae0'];
   const colorIdx = Math.abs(String(userId).split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % colors.length;
   return `<div class="msg-avatar-sm" style="background:${colors[colorIdx]};color:#fff;">${initials}</div>`;
