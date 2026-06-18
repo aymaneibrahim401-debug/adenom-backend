@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
       const lastMsgs = await Promise.all(groups.map(g => db.getLastMessage(g.id)));
       const groupsWithPreview = groups.map((g, i) => {
         const last = lastMsgs[i];
-        return { ...g, lastMessage: last ? { senderName: last.senderName, text: last.text, createdAt: last.createdAt } : null };
+        return { ...g, lastMessage: last ? { userId: last.userId, senderName: last.senderName, text: last.text, createdAt: last.createdAt } : null };
       });
       return res.status(200).json({ groups: groupsWithPreview });
     }
