@@ -2852,6 +2852,79 @@ function savePseudo(){
 async function loadAndRenderMessages(){
   await pollGroupData();
 }
+
+// ========== ACTUALITÉS — DASHBOARD MEMBRE ==========
+async function openMemberDashboard(){
+  // Mettre à jour le nom de bienvenue
+  const nameEl = document.getElementById('dashName');
+  if(nameEl && currentUser){
+    nameEl.textContent = 'Bonjour ' + (currentUser.pseudo || currentUser.firstName || '') + ' !';
+  }
+  // Afficher l'overlay
+  const overlay = document.getElementById('memberDashOverlay');
+  if(overlay) overlay.classList.add('show');
+  // Charger les actualités
+  await loadActuList();
+}
+
+function closeMemberDashboard(){
+  const overlay = document.getElementById('memberDashOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
+
+function closeMemberDashOnOverlay(e){
+  if(e.target === document.getElementById('memberDashOverlay')){
+    closeMemberDashboard();
+  }
+}
+
+async function postActu(){
+  const title = document.getElementById('actuTitle').value.trim();
+  const text = document.getElementById('actuInput').value.trim();
+  const tag = document.getElementById('actuTag').value;
+  if(!title && !text){ alert('Ajoutez un titre ou un texte.'); return; }
+  try{
+    const res = await fetch('/api/messages?action=actu-post', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ tag, title, text })
+    });
+    if(!res.ok){ alert('Erreur lors de la publication.'); return; }
+    document.getElementById('actuTitle').value = '';
+    document.getElementById('actuInput').value = '';
+    await loadActuList();
+  }catch(e){ alert('Erreur réseau.'); }
+}
+
+async function loadActuList(){
+  const el = document.getElementById('actuList');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Chargement...</div>';
+  try{
+    const res = await fetch('/api/messages?action=actu-list');
+    const data = await res.json();
+    const list = data.actualities || [];
+    if(!list.length){
+      el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>';
+      return;
+    }
+    el.innerHTML = list.map(a => {
+      const date = new Date(a.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+      const tagLabel = a.tag==='info' ? 'ℹ️ Info' : a.tag==='event' ? '📅 Événement' : '🚨 Urgent';
+      return `<div class="actu-card" style="background:#fff;border-radius:14px;margin:0 16px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);overflow:hidden;">
+        ${a.image ? `<img src="${a.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;">` : ''}
+        <div class="actu-body">
+          <span class="actu-tag ${a.tag}">${tagLabel}</span>
+          ${a.title ? `<div class="actu-title-text">${a.title}</div>` : ''}
+          ${a.text ? `<div class="actu-text">${a.text}</div>` : ''}
+          <div class="actu-date">🕐 ${date}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#e0334d;font-size:13px;">Erreur de chargement.</div>';
+  }
+}
 </script>
 
 <!-- Lightbox CIN -->
