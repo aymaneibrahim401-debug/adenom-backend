@@ -115,6 +115,108 @@ header.hide-on-scroll{
 /* PROFILE BUBBLE */
 .profile-bubble-wrap{position:relative;}
 
+/* ===== ÉDITION PROFIL ===== */
+.edit-profile-field{ margin-bottom:14px; }
+.edit-profile-field label{
+  display:block;font-size:12px;font-weight:700;color:#444;margin-bottom:6px;
+}
+.edit-profile-field input, .edit-profile-field select{
+  width:100%;padding:11px 13px;border-radius:10px;
+  border:1.5px solid #e4e6eb;background:#f8f9fa;
+  font-size:14px;outline:none;font-family:inherit;box-sizing:border-box;
+  transition:border-color 0.15s;
+}
+.edit-profile-field input:focus, .edit-profile-field select:focus{
+  border-color:#0070ba;background:#fff;
+}
+.edit-profile-save-btn{
+  width:100%;padding:13px;background:#0070ba;color:#fff;
+  border:none;border-radius:12px;font-size:14px;font-weight:700;
+  cursor:pointer;margin-top:6px;transition:0.15s;
+}
+.edit-profile-save-btn:hover{background:#005ea6;}
+.edit-profile-save-btn:active{transform:scale(0.98);}
+.edit-profile-success{
+  background:#e9fbe9;color:#155724;padding:10px 14px;border-radius:10px;
+  font-size:13px;font-weight:600;margin-bottom:14px;display:none;text-align:center;
+}
+
+/* ===== PAGE MEMBRES ===== */
+.members-page-header{
+  background:linear-gradient(135deg,#003087,#0070ba);
+  padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.members-search{
+  margin:12px;position:relative;
+}
+.members-search input{
+  width:100%;padding:10px 14px 10px 38px;border-radius:20px;
+  border:1.5px solid #e4e6eb;background:#f0f2f5;
+  font-size:14px;outline:none;font-family:inherit;box-sizing:border-box;
+}
+.members-search input:focus{background:#fff;border-color:#0070ba;}
+.members-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#65676b;font-size:15px;}
+.member-card{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:#fff;margin:4px 10px;border-radius:14px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);cursor:pointer;
+  transition:box-shadow 0.15s;
+}
+.member-card:active{box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.member-card-avatar{
+  width:50px;height:50px;border-radius:50%;background:#e4e6eb;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;flex-shrink:0;overflow:hidden;
+}
+.member-card-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.member-card-info{flex:1;min-width:0;}
+.member-card-name{font-size:14px;font-weight:700;color:#050505;}
+.member-card-sub{font-size:12px;color:#65676b;margin-top:2px;}
+.member-card-badge{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;
+  background:#e3f0ff;color:#0070ba;flex-shrink:0;
+}
+.member-card-badge.bureau{background:#f0e8ff;color:#7b2fff;}
+
+/* Fiche profil membre */
+.member-profile-overlay{
+  position:fixed;inset:0;background:#f0f2f5;z-index:3600;
+  display:none;flex-direction:column;overflow-y:auto;
+}
+.member-profile-overlay.open{display:flex;}
+.member-profile-hero{
+  background:linear-gradient(135deg,#003087,#0070ba);
+  padding:20px 18px 32px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  position:relative;
+}
+.member-profile-back{
+  position:absolute;top:16px;left:16px;
+  background:rgba(255,255,255,0.18);border:none;color:#fff;
+  width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;
+}
+.member-profile-photo{
+  width:80px;height:80px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;overflow:hidden;
+  border:3px solid rgba(255,255,255,0.4);
+}
+.member-profile-photo img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.member-profile-name{color:#fff;font-size:18px;font-weight:800;text-align:center;}
+.member-profile-status{color:rgba(255,255,255,0.8);font-size:13px;}
+.member-profile-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.member-profile-card{
+  background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+.member-profile-card-title{
+  font-size:11px;font-weight:700;color:#65676b;
+  text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;
+}
+.member-profile-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.member-profile-row-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0;}
+.member-profile-row-label{font-size:12px;color:#65676b;min-width:80px;flex-shrink:0;}
+.member-profile-row-val{font-size:13px;font-weight:600;color:#050505;flex:1;}
+
 /* ===== CLOCHE NOTIFICATIONS ===== */
 .notif-bell-wrap{
   position:relative;display:flex;align-items:center;
@@ -765,6 +867,8 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <a href="#" onclick="openMemberDashboard();closeProfileMenu();return false;">📰 Actualités</a>
         <a href="#" onclick="openMessaging();closeProfileMenu();return false;">💬 Messagerie groupes</a>
         <a href="#" onclick="openNotifPage();closeProfileMenu();return false;">🔔 Notifications <span id="menuNotifBadge" style="background:#e0334d;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;display:none;"></span></a>
+        <a href="#" onclick="openMembersPage();closeProfileMenu();return false;">👥 Membres</a>
+        <a href="#" onclick="openMyProfileEdit();closeProfileMenu();return false;">✏️ Mon profil</a>
       </div>
       <div class="profile-menu-nav">
         <a href="#hero" onclick="closeProfileMenu()">🏠 Accueil</a>
@@ -1108,6 +1212,76 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
   <img src="images/image1.png" class="footer-logo" alt="ADENOM">
   <p>© 2026 ADENOM · Tous droits réservés</p>
 </footer>
+
+<!-- ÉDITION PROFIL -->
+<div id="editProfileOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:3700;display:none;flex-direction:column;">
+  <div style="background:linear-gradient(135deg,#003087,#0070ba);padding:16px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <button onclick="closeMyProfileEdit()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;">‹</button>
+    <span style="color:#fff;font-size:17px;font-weight:800;">✏️ Mon profil</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;">
+    <div class="edit-profile-success" id="editProfileSuccess">✅ Profil mis à jour avec succès !</div>
+    <form onsubmit="return saveMyProfile(event)">
+      <div class="edit-profile-field">
+        <label>🏫 École / Université</label>
+        <input type="text" id="editSchool" placeholder="Ex : Université de Mahajanga">
+      </div>
+      <div class="edit-profile-field">
+        <label>📚 Filière et parcours</label>
+        <input type="text" id="editField" placeholder="Ex : Droit - Affaires">
+      </div>
+      <div class="edit-profile-field">
+        <label>🎯 Niveau</label>
+        <input type="text" id="editLevel" placeholder="Ex : L1, L2, L3, M1, M2...">
+      </div>
+      <div class="edit-profile-field">
+        <label>🎓 Année promotion ADENOM</label>
+        <input type="text" id="editPromotion" inputmode="numeric" placeholder="Ex : 2026">
+      </div>
+      <div class="edit-profile-field">
+        <label>🚪 Porte</label>
+        <input type="text" id="editRole" placeholder="Ex : PVE1">
+      </div>
+      <div class="edit-profile-field">
+        <label>🏅 Poste</label>
+        <select id="editPoste">
+          <option value="membre">👤 Membre</option>
+          <option value="bureau">🏅 Membre de bureau</option>
+        </select>
+      </div>
+      <div class="edit-profile-field">
+        <label>📞 Numéro joignable</label>
+        <input type="text" id="editPhone" placeholder="Ex : 034 00 000 00">
+      </div>
+      <button type="submit" class="edit-profile-save-btn" id="editProfileSaveBtn">Sauvegarder mon profil</button>
+    </form>
+  </div>
+</div>
+
+<!-- PAGE MEMBRES -->
+<div id="membersPageOverlay" style="position:fixed;inset:0;background:#f0f2f5;z-index:3500;display:none;flex-direction:column;">
+  <div class="members-page-header">
+    <button onclick="closeMembersPage()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer;flex-shrink:0;">‹</button>
+    <span style="color:#fff;font-size:17px;font-weight:800;">👥 Membres ADENOM</span>
+    <span id="membersCount" style="margin-left:auto;color:rgba(255,255,255,0.8);font-size:12px;"></span>
+  </div>
+  <div class="members-search">
+    <span class="members-search-icon">🔍</span>
+    <input type="text" id="membersSearchInput" placeholder="Rechercher un membre..." oninput="filterMembers()">
+  </div>
+  <div id="membersListEl" style="flex:1;overflow-y:auto;padding-bottom:16px;"></div>
+</div>
+
+<!-- FICHE PROFIL MEMBRE -->
+<div id="memberProfileOverlay" class="member-profile-overlay">
+  <div class="member-profile-hero">
+    <button class="member-profile-back" onclick="closeMemberProfile()">‹</button>
+    <div class="member-profile-photo" id="mpPhoto"></div>
+    <div class="member-profile-name" id="mpName"></div>
+    <div class="member-profile-status" id="mpStatus"></div>
+  </div>
+  <div class="member-profile-body" id="mpBody"></div>
+</div>
 
 <script>
 
@@ -2904,6 +3078,174 @@ function clearAllNotifs(){
   renderNotifBadge();
   renderNotifList();
 }
+// ============ ÉDITION DE MON PROFIL ============
+function openMyProfileEdit(){
+  if(!currentUser) return;
+  let details = {};
+  try{ details = JSON.parse(currentUser.membershipMessage || '{}'); }catch(e){}
+
+  document.getElementById('editSchool').value = details.school || '';
+  document.getElementById('editField').value = details.field || '';
+  document.getElementById('editLevel').value = details.level || '';
+  document.getElementById('editPromotion').value = details.promotion || '';
+  document.getElementById('editRole').value = details.role || '';
+  document.getElementById('editPoste').value = details.poste === 'bureau' ? 'bureau' : 'membre';
+  document.getElementById('editPhone').value = details.phone || '';
+  document.getElementById('editProfileSuccess').style.display = 'none';
+
+  document.getElementById('editProfileOverlay').style.display = 'flex';
+}
+
+function closeMyProfileEdit(){
+  document.getElementById('editProfileOverlay').style.display = 'none';
+}
+
+async function saveMyProfile(event){
+  event.preventDefault();
+  const btn = document.getElementById('editProfileSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sauvegarde...';
+
+  const payload = {
+    school: document.getElementById('editSchool').value.trim(),
+    field: document.getElementById('editField').value.trim(),
+    level: document.getElementById('editLevel').value.trim(),
+    promotion: document.getElementById('editPromotion').value.trim(),
+    role: document.getElementById('editRole').value.trim(),
+    poste: document.getElementById('editPoste').value,
+    phone: document.getElementById('editPhone').value.trim()
+  };
+
+  try{
+    const data = await apiRequest('/api/me?action=profile', { method:'POST', body: payload });
+    if(data && data.user) currentUser = data.user;
+    document.getElementById('editProfileSuccess').style.display = 'block';
+    btn.textContent = 'Sauvegarder mon profil';
+    btn.disabled = false;
+    setTimeout(() => { closeMyProfileEdit(); }, 1200);
+  }catch(e){
+    alert("Erreur lors de la sauvegarde : " + (e.message || 'réessayez.'));
+    btn.textContent = 'Sauvegarder mon profil';
+    btn.disabled = false;
+  }
+  return false;
+}
+
+// ============ PAGE MEMBRES ============
+let _membersData = [];
+
+async function openMembersPage(){
+  const overlay = document.getElementById('membersPageOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('membersListEl').innerHTML = '<div style="text-align:center;padding:32px;color:#65676b;font-size:13px;">Chargement...</div>';
+  try{
+    const data = await apiRequest('/api/messages?action=members');
+    _membersData = data.members || [];
+    document.getElementById('membersCount').textContent = _membersData.length + ' membre' + (_membersData.length>1?'s':'');
+    renderMembersList(_membersData);
+  }catch(e){
+    document.getElementById('membersListEl').innerHTML = '<div style="text-align:center;padding:32px;color:#e0334d;font-size:13px;">Erreur de chargement.</div>';
+  }
+}
+
+function closeMembersPage(){
+  document.getElementById('membersPageOverlay').style.display = 'none';
+}
+
+function filterMembers(){
+  const q = document.getElementById('membersSearchInput').value.toLowerCase();
+  const filtered = _membersData.filter(m => {
+    const name = (m.firstName + ' ' + m.lastName).toLowerCase();
+    let details = {};
+    try{ details = JSON.parse(m.membershipMessage||'{}'); }catch(e){}
+    return name.includes(q) || (details.school||'').toLowerCase().includes(q) || (details.promotion||'').toLowerCase().includes(q);
+  });
+  renderMembersList(filtered);
+}
+
+function renderMembersList(members){
+  const el = document.getElementById('membersListEl');
+  if(!members.length){
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:#65676b;font-size:13px;">Aucun membre trouvé.</div>';
+    return;
+  }
+  const colors = ['#0070ba','#e05c2a','#7b2fff','#31a24c','#e04080','#2a7ae0'];
+  el.innerHTML = members.map(m => {
+    let details = {};
+    try{ details = JSON.parse(m.membershipMessage||'{}'); }catch(e){}
+    const name = m.firstName + ' ' + m.lastName;
+    const initials = name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+    const colorIdx = Math.abs(String(m.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % colors.length;
+    const photo = m.profilePhoto || getPublicPhoto(String(m.id));
+    const avatarHtml = photo
+      ? `<div class="member-card-avatar"><img src="${photo}" alt=""></div>`
+      : `<div class="member-card-avatar" style="background:${colors[colorIdx]};color:#fff;">${initials}</div>`;
+    const isBureau = details.poste === 'bureau';
+    const sub = [details.school, details.level ? 'Niveau ' + details.level : ''].filter(Boolean).join(' · ');
+    return `<div class="member-card" onclick="openMemberProfile('${m.id}')">
+      ${avatarHtml}
+      <div class="member-card-info">
+        <div class="member-card-name">${escapeHtml(name)}</div>
+        ${sub ? `<div class="member-card-sub">${escapeHtml(sub)}</div>` : ''}
+      </div>
+      <span class="member-card-badge${isBureau?' bureau':''}">${isBureau?'🏅 Bureau':'👤 Membre'}</span>
+    </div>`;
+  }).join('');
+}
+
+function openMemberProfile(memberId){
+  const m = _membersData.find(x => String(x.id) === String(memberId));
+  if(!m) return;
+  let details = {};
+  try{ details = JSON.parse(m.membershipMessage||'{}'); }catch(e){}
+
+  const name = m.firstName + ' ' + m.lastName;
+  const colors = ['#0070ba','#e05c2a','#7b2fff','#31a24c','#e04080','#2a7ae0'];
+  const colorIdx = Math.abs(String(m.id).split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % colors.length;
+  const photo = m.profilePhoto || getPublicPhoto(String(m.id));
+
+  // Photo
+  const photoEl = document.getElementById('mpPhoto');
+  if(photo){
+    photoEl.innerHTML = `<img src="${photo}" alt="">`;
+  } else {
+    const initials = name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+    photoEl.innerHTML = initials;
+    photoEl.style.cssText = `background:${colors[colorIdx]};color:#fff;font-size:28px;font-weight:700;`;
+  }
+
+  document.getElementById('mpName').textContent = name;
+  document.getElementById('mpStatus').textContent = details.poste === 'bureau' ? '🏅 Membre de bureau' : '👤 Membre ADENOM';
+
+  // Corps de la fiche
+  const rows = [
+    details.school    ? ['🏫','École / Université', details.school] : null,
+    details.field     ? ['📚','Filière', details.field] : null,
+    details.level     ? ['🎯','Niveau', details.level] : null,
+    details.promotion ? ['🎓','Promotion ADENOM', details.promotion] : null,
+    details.role      ? ['🚪','Porte', details.role] : null,
+    details.poste     ? ['🏅','Poste', details.poste === 'bureau' ? 'Membre de bureau' : 'Membre'] : null,
+    details.phone     ? ['📞','Téléphone', details.phone] : null,
+  ].filter(Boolean);
+
+  document.getElementById('mpBody').innerHTML = `
+    <div class="member-profile-card">
+      <div class="member-profile-card-title">Informations</div>
+      ${rows.map(([icon, label, val]) => `
+        <div class="member-profile-row">
+          <span class="member-profile-row-icon">${icon}</span>
+          <span class="member-profile-row-label">${label}</span>
+          <span class="member-profile-row-val">${escapeHtml(String(val))}</span>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('memberProfileOverlay').classList.add('open');
+}
+
+function closeMemberProfile(){
+  document.getElementById('memberProfileOverlay').classList.remove('open');
+}
+
 function openNotifPage(){
   // Fermer tous les autres panneaux ouverts
   closeProfileMenu && closeProfileMenu();
@@ -3494,4 +3836,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Jeu 18 jui 2026 23:51:47 EAT
+</html>Ven 19 jui 2026 07:54:01 EAT

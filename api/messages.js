@@ -137,6 +137,21 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true });
     }
 
+    // ---- MEMBERS LIST (accessible à tout membre connecté) ----
+    if (action === 'members' && req.method === 'GET') {
+      const allUsers = await db.getAllUsers();
+      const members = allUsers
+        .filter(u => u.accountStatus === 'member')
+        .map(u => ({
+          id: u.id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          profilePhoto: u.profilePhoto || null,
+          membershipMessage: u.membershipMessage || ''
+        }));
+      return res.status(200).json({ members });
+    }
+
     return res.status(400).json({ error: 'Action inconnue.' });
 
   } catch (err) {
