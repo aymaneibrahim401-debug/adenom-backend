@@ -295,7 +295,7 @@ header.hide-on-scroll{
 .profile-bubble:hover{background:#005ea6;}
 .profile-bubble:active{transform:scale(0.92);}
 .profile-bubble-dot{
-  position:absolute;top:-2px;right:-2px;
+  position:absolute;bottom:-2px;right:-2px;
   width:11px;height:11px;border-radius:50%;
   background:#f5a623;border:2px solid var(--bg-header);
 }
@@ -1708,12 +1708,17 @@ function updateAccountUI(){
   const isLoggedIn = !!currentUser;
   if(isLoggedIn){ renderNotifBadge(); updateMenuNotifBadge(); }
 
+  const logoImg = document.querySelector('header .logo-img');
+  const headerRight = document.getElementById('headerRight');
+
   if(isLoggedIn){
     if(btnLogin) btnLogin.style.display = 'none';
     if(btnSignup) btnSignup.style.display = 'none';
     if(hamburger) hamburger.style.display = 'none';
     if(profileWrap) profileWrap.style.display = '';
     if(memberBanner) memberBanner.style.display = '';
+    if(logoImg) logoImg.style.display = 'none';
+    if(headerRight) headerRight.style.justifyContent = 'flex-start';
 
     const fullName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
     if(nameEl) nameEl.textContent = fullName || 'Mon compte';
@@ -1752,6 +1757,8 @@ function updateAccountUI(){
     if(hamburger) hamburger.style.display = '';
     if(profileWrap) profileWrap.style.display = 'none';
     if(memberBanner) memberBanner.style.display = 'none';
+    if(logoImg) logoImg.style.display = '';
+    if(headerRight) headerRight.style.justifyContent = '';
     if(heroCta) heroCta.style.display = '';
     const mnl = document.getElementById('memberNavLinks');
     if(mnl) mnl.style.display = 'none';
@@ -3849,4 +3856,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:18:44 EAT
+</html>Ven 19 jui 2026 08:38:36 EAT
