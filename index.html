@@ -1161,7 +1161,12 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
           <select id="joinPoste" required style="width:100%;padding:10px 12px;border:1.5px solid #e8eef5;border-radius:10px;font-size:14px;background:#fff;color:#333;">
             <option value="">-- Sélectionner --</option>
             <option value="membre">👤 Membre</option>
-            <option value="bureau">🏅 Membre de bureau</option>
+            <option value="bureau-president">🏅 Membre de bureau – Président(e)</option>
+            <option value="bureau-vp">🏅 Membre de bureau – Vice-Président(e)</option>
+            <option value="bureau-secretaire">🏅 Membre de bureau – Secrétaire</option>
+            <option value="bureau-tresorier">🏅 Membre de bureau – Trésorier(re)</option>
+            <option value="bureau-materiel">🏅 Membre de bureau – Matériel</option>
+            <option value="bureau-autre">🏅 Membre de bureau – Autre</option>
           </select>
           <span class="auth-hint">⚠️ Membre = membre ordinaire · Membre de bureau = responsable ou dirigeant.</span>
         </div>
@@ -1293,10 +1298,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 <div class="adenom-modal-overlay" id="volaModalOverlay">
   <div class="adenom-modal">
     <div class="adenom-modal-title">💰 Nouvelle transaction</div>
-    <div class="adenom-admin-code-field">
-      <label>🔐 Code administrateur</label>
-      <input type="password" id="volaAdminCode" placeholder="Code admin...">
-    </div>
     <div class="adenom-modal-row">
       <div class="adenom-modal-field">
         <label>Type</label>
@@ -1333,10 +1334,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
 <div class="adenom-modal-overlay" id="materielModalOverlay">
   <div class="adenom-modal">
     <div class="adenom-modal-title" id="materielModalTitle">📦 Nouveau matériel</div>
-    <div class="adenom-admin-code-field">
-      <label>🔐 Code administrateur</label>
-      <input type="password" id="materielAdminCode" placeholder="Code admin...">
-    </div>
     <div class="adenom-modal-field">
       <label>Nom du matériel</label>
       <input type="text" id="materielNom" placeholder="Ex: Sono, Table, Chaise...">
@@ -3451,6 +3448,37 @@ async function saveMyProfile(event){
 let _membersData = [];
 
 
+// ========== HELPERS POSTE ==========
+function posteLabel(poste) {
+  const labels = {
+    'membre':            '👤 Membre',
+    'bureau':            '🏅 Membre de bureau',
+    'bureau-president':  '🏅 Membre de bureau – Président(e)',
+    'bureau-vp':         '🏅 Membre de bureau – Vice-Président(e)',
+    'bureau-secretaire': '🏅 Membre de bureau – Secrétaire',
+    'bureau-tresorier':  '🏅 Membre de bureau – Trésorier(re)',
+    'bureau-materiel':   '🏅 Membre de bureau – Matériel',
+    'bureau-autre':      '🏅 Membre de bureau – Autre',
+  };
+  return labels[poste] || poste;
+}
+
+function canEditVola() {
+  if (!currentUser) return false;
+  try {
+    const d = JSON.parse(currentUser.membershipMessage || '{}');
+    return d.poste === 'bureau-tresorier';
+  } catch(e) { return false; }
+}
+
+function canEditMateriel() {
+  if (!currentUser) return false;
+  try {
+    const d = JSON.parse(currentUser.membershipMessage || '{}');
+    return d.poste === 'bureau-materiel';
+  } catch(e) { return false; }
+}
+
 // ========== PAGE ADENOM ==========
 let _adenomAdminCode = null;
 let _materielEditId = null;
@@ -3486,7 +3514,7 @@ async function loadVola() {
     document.getElementById('volaSoldeAmount').textContent = formatAriary(solde);
     document.getElementById('volaSoldeAmount').style.color = solde < 0 ? '#ffaaaa' : '#fff';
     const txs = data.transactions || [];
-    if (adenomIsAdmin()) document.getElementById('volaAddBtn').style.display = '';
+    if (canEditVola()) document.getElementById('volaAddBtn').style.display = '';
     if (!txs.length) {
       el.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa;font-size:13px;">Aucune transaction pour le moment.</div>';
       return;
@@ -3502,7 +3530,7 @@ async function loadVola() {
           <div class="vola-tx-meta">👤 ${escHtml(t.faitPar)} &nbsp;·&nbsp; 📅 ${date}</div>
         </div>
         <div class="vola-tx-amount ${t.type}">${sign}${formatAriary(t.montant)}</div>
-        ${adenomIsAdmin() ? `<button class="vola-tx-delete" onclick="deleteVolaTransaction('${t.id}')" title="Supprimer">🗑</button>` : ''}
+        ${canEditVola() ? `<button class="vola-tx-delete" onclick="deleteVolaTransaction('${t.id}')" title="Supprimer">🗑</button>` : ''}
       </div>`;
     }).join('');
   } catch(e) {
@@ -3530,7 +3558,6 @@ function closeVolaModal() {
   document.getElementById('volaModalOverlay').classList.remove('show');
 }
 async function submitVolaTransaction() {
-  const code = document.getElementById('volaAdminCode').value.trim();
   const montant = parseFloat(document.getElementById('volaMontant').value);
   const description = document.getElementById('volaDescription').value.trim();
   const faitPar = document.getElementById('volaFaitPar').value.trim();
@@ -3540,12 +3567,12 @@ async function submitVolaTransaction() {
   try {
     const res = await fetch('/api/messages?action=vola-add', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ montant, type, description, faitPar, createdAt: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString() })
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || 'Erreur.'); return; }
-    _adenomAdminCode = code;
     closeVolaModal();
     await loadVola();
   } catch(e) { alert('Erreur réseau.'); }
@@ -3554,7 +3581,8 @@ async function deleteVolaTransaction(id) {
   if (!confirm('Supprimer cette transaction ?')) return;
   await fetch('/api/messages?action=vola-delete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-admin-code': _adenomAdminCode },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ id })
   });
   await loadVola();
@@ -3568,7 +3596,7 @@ async function loadMateriels() {
     const res = await fetch('/api/messages?action=materiel-list');
     const data = await res.json();
     const list = data.materiels || [];
-    if (adenomIsAdmin()) document.getElementById('materielAddBtn').style.display = '';
+    if (canEditMateriel()) document.getElementById('materielAddBtn').style.display = '';
     if (!list.length) {
       el.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa;font-size:13px;">Aucun matériel enregistré.</div>';
       return;
@@ -3582,7 +3610,7 @@ async function loadMateriels() {
           <span class="materiel-etat ${m.etat}">${etatLabel[m.etat] || m.etat}</span>
         </div>
         ${m.description ? `<div class="materiel-desc">${escHtml(m.description)}</div>` : ''}
-        ${adenomIsAdmin() ? `<div class="materiel-actions">
+        ${canEditMateriel() ? `<div class="materiel-actions">
           <button class="materiel-edit-btn" onclick="openMaterielModal(${JSON.stringify(m).replace(/"/g,'&quot;')})">✏️ Modifier</button>
           <button class="materiel-del-btn" onclick="deleteMateriel('${m.id}')">🗑</button>
         </div>` : ''}
@@ -3595,7 +3623,6 @@ async function loadMateriels() {
 function openMaterielModal(m) {
   _materielEditId = m ? m.id : null;
   document.getElementById('materielModalTitle').textContent = m ? '✏️ Modifier le matériel' : '📦 Nouveau matériel';
-  document.getElementById('materielAdminCode').value = _adenomAdminCode || '';
   document.getElementById('materielNom').value = m ? m.nom : '';
   document.getElementById('materielQuantite').value = m ? m.quantite : 1;
   document.getElementById('materielEtat').value = m ? m.etat : 'bon';
@@ -3606,7 +3633,6 @@ function closeMaterielModal() {
   document.getElementById('materielModalOverlay').classList.remove('show');
 }
 async function submitMateriel() {
-  const code = document.getElementById('materielAdminCode').value.trim();
   const nom = document.getElementById('materielNom').value.trim();
   const quantite = parseInt(document.getElementById('materielQuantite').value) || 1;
   const etat = document.getElementById('materielEtat').value;
@@ -3618,12 +3644,12 @@ async function submitMateriel() {
   try {
     const res = await fetch('/api/messages?action=' + action, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) { alert(data.error || 'Erreur.'); return; }
-    _adenomAdminCode = code;
     closeMaterielModal();
     await loadMateriels();
   } catch(e) { alert('Erreur réseau.'); }
@@ -3632,7 +3658,8 @@ async function deleteMateriel(id) {
   if (!confirm('Supprimer ce matériel ?')) return;
   await fetch('/api/messages?action=materiel-delete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-admin-code': _adenomAdminCode },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ id })
   });
   await loadMateriels();
@@ -3684,7 +3711,7 @@ function renderMembersList(members){
     const avatarHtml = photo
       ? `<div class="member-card-avatar"><img src="${photo}" alt=""></div>`
       : `<div class="member-card-avatar" style="background:${colors[colorIdx]};color:#fff;">${initials}</div>`;
-    const isBureau = details.poste === 'bureau';
+    const isBureau = details.poste && details.poste.startsWith('bureau');
     const sub = [details.school, details.level ? 'Niveau ' + details.level : ''].filter(Boolean).join(' · ');
     return `<div class="member-card" onclick="openMemberProfile('${m.id}')">
       ${avatarHtml}
@@ -3719,7 +3746,7 @@ function openMemberProfile(memberId){
   }
 
   document.getElementById('mpName').textContent = name;
-  document.getElementById('mpStatus').textContent = details.poste === 'bureau' ? '🏅 Membre de bureau' : '👤 Membre ADENOM';
+  document.getElementById('mpStatus').textContent = details.poste && details.poste.startsWith('bureau') ? '🏅 ' + posteLabel(details.poste) : '👤 Membre ADENOM';
 
   // Corps de la fiche
   const rows = [
@@ -3728,7 +3755,7 @@ function openMemberProfile(memberId){
     details.level     ? ['🎯','Niveau', details.level] : null,
     details.promotion ? ['🎓','Promotion ADENOM', details.promotion] : null,
     details.role      ? ['🚪','Porte', details.role] : null,
-    details.poste     ? ['🏅','Poste', details.poste === 'bureau' ? 'Membre de bureau' : 'Membre'] : null,
+    details.poste     ? ['🏅','Poste', posteLabel(details.poste)] : null,
     details.phone     ? ['📞','Téléphone', details.phone] : null,
   ].filter(Boolean);
 
@@ -4306,7 +4333,7 @@ function adminCard(u){
     ${details.school ? `<div class="admin-user-info">🏫 ${details.school}</div>` : ''}
     ${details.field ? `<div class="admin-user-info">📚 ${details.field} — ${details.level || ''}</div>` : ''}
     ${details.role ? `<div class="admin-user-info">🚪 Porte : ${details.role}</div>` : ''}
-    ${details.poste ? `<div class="admin-user-info">🏅 Poste : ${details.poste === 'bureau' ? 'Membre de bureau' : 'Membre'}</div>` : ''}
+    ${details.poste ? `<div class="admin-user-info">🏅 Poste : ${posteLabel(details.poste)}</div>` : ''}
     ${details.promotion ? `<div class="admin-user-info">🎓 Promo : ${details.promotion}</div>` : ''}
     ${cinImgs}
     ${actions}
@@ -4335,4 +4362,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 14:14:05 EAT
+</html>Ven 19 jui 2026 15:22:53 EAT

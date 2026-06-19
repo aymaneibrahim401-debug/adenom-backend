@@ -164,7 +164,10 @@ module.exports = async (req, res) => {
 
     // ---- VOLA ADD (admin only) ----
     if (action === 'vola-add' && req.method === 'POST') {
-      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      if (!user) return res.status(401).json({ error: 'Non connecté.' });
+      let userDetails = {};
+      try { userDetails = JSON.parse(user.membershipMessage || '{}'); } catch(e) {}
+      if (userDetails.poste !== 'bureau-tresorier') return res.status(403).json({ error: 'Accès réservé au Trésorier(re).' });
       const t = {
         id: randomUUID(),
         montant: parseFloat(body.montant) || 0,
@@ -180,7 +183,10 @@ module.exports = async (req, res) => {
 
     // ---- VOLA DELETE (admin only) ----
     if (action === 'vola-delete' && req.method === 'POST') {
-      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      if (!user) return res.status(401).json({ error: 'Non connecté.' });
+      let userDetails = {};
+      try { userDetails = JSON.parse(user.membershipMessage || '{}'); } catch(e) {}
+      if (userDetails.poste !== 'bureau-tresorier') return res.status(403).json({ error: 'Accès réservé au Trésorier(re).' });
       await db.deleteVolaTransaction(body.id);
       return res.status(200).json({ ok: true });
     }
@@ -193,7 +199,10 @@ module.exports = async (req, res) => {
 
     // ---- MATERIEL ADD (admin only) ----
     if (action === 'materiel-add' && req.method === 'POST') {
-      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      if (!user) return res.status(401).json({ error: 'Non connecté.' });
+      let userDetails = {};
+      try { userDetails = JSON.parse(user.membershipMessage || '{}'); } catch(e) {}
+      if (userDetails.poste !== 'bureau-materiel') return res.status(403).json({ error: 'Accès réservé au responsable Matériel.' });
       const m = {
         id: randomUUID(),
         nom: (body.nom || '').slice(0, 200),
@@ -209,7 +218,10 @@ module.exports = async (req, res) => {
 
     // ---- MATERIEL UPDATE (admin only) ----
     if (action === 'materiel-update' && req.method === 'POST') {
-      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      if (!user) return res.status(401).json({ error: 'Non connecté.' });
+      let userDetails = {};
+      try { userDetails = JSON.parse(user.membershipMessage || '{}'); } catch(e) {}
+      if (userDetails.poste !== 'bureau-materiel') return res.status(403).json({ error: 'Accès réservé au responsable Matériel.' });
       const m = {
         id: body.id,
         nom: (body.nom || '').slice(0, 200),
@@ -224,7 +236,10 @@ module.exports = async (req, res) => {
 
     // ---- MATERIEL DELETE (admin only) ----
     if (action === 'materiel-delete' && req.method === 'POST') {
-      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      if (!user) return res.status(401).json({ error: 'Non connecté.' });
+      let userDetails = {};
+      try { userDetails = JSON.parse(user.membershipMessage || '{}'); } catch(e) {}
+      if (userDetails.poste !== 'bureau-materiel') return res.status(403).json({ error: 'Accès réservé au responsable Matériel.' });
       await db.deleteMateriel(body.id);
       return res.status(200).json({ ok: true });
     }
