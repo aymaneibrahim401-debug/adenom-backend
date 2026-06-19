@@ -39,7 +39,8 @@ module.exports = async (req, res) => {
       details.level      = (body.level || '').slice(0, 50);
       details.promotion  = (body.promotion || '').slice(0, 20);
       details.role       = (body.role || '').slice(0, 50);
-      details.poste      = body.poste === 'bureau' ? 'bureau' : 'membre';
+      // poste n'est PAS modifiable depuis "Mon profil" — uniquement lors de l'adhésion initiale
+      details.poste      = details.poste || 'membre';
       details.phone      = (body.phone || '').slice(0, 30);
       // Conserver le CIN et les images CIN déjà stockés
       const updatedMessage = JSON.stringify(details);

@@ -1243,13 +1243,6 @@ footer p{font-size:12px;color:rgba(255,255,255,0.7);}
         <input type="text" id="editRole" placeholder="Ex : PVE1">
       </div>
       <div class="edit-profile-field">
-        <label>🏅 Poste</label>
-        <select id="editPoste">
-          <option value="membre">👤 Membre</option>
-          <option value="bureau">🏅 Membre de bureau</option>
-        </select>
-      </div>
-      <div class="edit-profile-field">
         <label>📞 Numéro joignable</label>
         <input type="text" id="editPhone" placeholder="Ex : 034 00 000 00">
       </div>
@@ -3089,7 +3082,6 @@ function openMyProfileEdit(){
   document.getElementById('editLevel').value = details.level || '';
   document.getElementById('editPromotion').value = details.promotion || '';
   document.getElementById('editRole').value = details.role || '';
-  document.getElementById('editPoste').value = details.poste === 'bureau' ? 'bureau' : 'membre';
   document.getElementById('editPhone').value = details.phone || '';
   document.getElementById('editProfileSuccess').style.display = 'none';
 
@@ -3112,7 +3104,6 @@ async function saveMyProfile(event){
     level: document.getElementById('editLevel').value.trim(),
     promotion: document.getElementById('editPromotion').value.trim(),
     role: document.getElementById('editRole').value.trim(),
-    poste: document.getElementById('editPoste').value,
     phone: document.getElementById('editPhone').value.trim()
   };
 
@@ -3836,4 +3827,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:00:21 EAT
+</html>Ven 19 jui 2026 08:04:30 EAT
