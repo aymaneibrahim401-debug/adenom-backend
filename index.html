@@ -1290,6 +1290,7 @@ document.getElementById('heroBg').style.backgroundImage = "url('" + _heroBgData 
 let authFlow = null; // 'join' = l'utilisateur veut rejoindre la communauté (passe d'abord par la création de compte)
 let waitingEmailVerification = false;
 let emailVerifPollingInterval = null;
+let membershipPollingInterval = null;
 
 function setSuccessIcon(type){
   const el = document.getElementById('authSuccessIcon');
@@ -1737,6 +1738,7 @@ function updateAccountUI(){
       if(subtitleEl) subtitleEl.textContent = 'Demande en attente ⏳';
       if(dot) dot.style.background = '#f5a623';
       if(heroCta) heroCta.style.display = 'none';
+      startMembershipPolling();
     } else if(currentUser.accountStatus === 'member'){
       if(subtitleEl) subtitleEl.textContent = 'Membre ADENOM ✅';
       // Notifier UNE SEULE FOIS, juste après la validation admin (pas à chaque rechargement)
@@ -1766,6 +1768,7 @@ function updateAccountUI(){
     if(memberBanner) memberBanner.style.display = 'none';
     if(logoImg) logoImg.style.display = '';
     if(headerRight) headerRight.style.justifyContent = '';
+    stopMembershipPolling();
     if(heroCta) heroCta.style.display = '';
     const mnl = document.getElementById('memberNavLinks');
     if(mnl) mnl.style.display = 'none';
@@ -1903,6 +1906,41 @@ document.addEventListener('click', (e) => {
     closeProfileMenu();
   }
 });
+
+// ---- Polling statut adhésion (pending → member sans déconnexion) ----
+function startMembershipPolling() {
+  if (membershipPollingInterval) return; // déjà actif
+  membershipPollingInterval = setInterval(async () => {
+    try {
+      const data = await apiRequest('/api/me');
+      if (!data || !data.user) return;
+      const newStatus = data.user.accountStatus;
+      const oldStatus = currentUser && currentUser.accountStatus;
+      if (newStatus !== oldStatus) {
+        currentUser = data.user;
+        updateAccountUI();
+        if (newStatus === 'member') {
+          stopMembershipPolling();
+          // Notif de bienvenue si pas encore affichée
+          const key = 'adenom_welcome_notified_' + currentUser.id;
+          if (!localStorage.getItem(key)) {
+            addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
+            localStorage.setItem(key, '1');
+          }
+        } else if (newStatus === 'active') {
+          // Rejet : on stoppe aussi le polling
+          stopMembershipPolling();
+        }
+      }
+    } catch(e) {}
+  }, 5000);
+}
+function stopMembershipPolling() {
+  if (membershipPollingInterval) {
+    clearInterval(membershipPollingInterval);
+    membershipPollingInterval = null;
+  }
+}
 
 // Récupère la session courante au chargement de la page
 (async function initAccountState(){
@@ -3863,4 +3901,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:41:34 EAT
+</html>Ven 19 jui 2026 08:59:24 EAT
