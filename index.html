@@ -1727,7 +1727,12 @@ function updateAccountUI(){
       if(heroCta) heroCta.style.display = 'none';
     } else if(currentUser.accountStatus === 'member'){
       if(subtitleEl) subtitleEl.textContent = 'Membre ADENOM ✅';
-      addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
+      // Notifier UNE SEULE FOIS, juste après la validation admin (pas à chaque rechargement)
+      const welcomeFlagKey = 'adenom_welcome_notified_' + currentUser.id;
+      if(!localStorage.getItem(welcomeFlagKey)){
+        addNotif('welcome', '🎉 Adhésion validée', 'Bienvenue dans la communauté ADENOM !', null);
+        localStorage.setItem(welcomeFlagKey, '1');
+      }
       if(dot) dot.style.background = '#2ecc71';
       const mnl = document.getElementById('memberNavLinks');
       if(mnl) mnl.style.display = '';
@@ -1894,7 +1899,32 @@ document.addEventListener('click', (e) => {
     currentUser = null;
   }
   updateAccountUI();
+  // Vérifier les nouvelles actualités AVANT que l'utilisateur ouvre la section Actualités
+  if(currentUser && currentUser.accountStatus === 'member'){
+    checkNewActuNotifs();
+  }
 })();
+
+// Détecte les nouvelles actualités publiées et notifie une seule fois par publication,
+// sans attendre que l'utilisateur ouvre la page Actualités.
+async function checkNewActuNotifs(){
+  try{
+    const res = await fetch('/api/messages?action=actu-list');
+    const data = await res.json();
+    const list = data.actualities || [];
+    if(!list.length) return;
+    const lastSeenActu = parseInt(localStorage.getItem('adenom_last_actu')||'0', 10);
+    // Du plus ancien au plus récent pour un ordre logique dans le panneau de notifs
+    [...list].reverse().forEach(a => {
+      const ts = new Date(a.createdAt).getTime();
+      if(ts > lastSeenActu){
+        const tag = a.tag==='urgent' ? '🚨' : a.tag==='event' ? '📅' : '📢';
+        addNotif('actu', tag + ' ' + (a.title||'Nouvelle publication'), a.text ? a.text.substring(0,80) : '', 'actu');
+      }
+    });
+    localStorage.setItem('adenom_last_actu', new Date(list[0].createdAt).getTime());
+  }catch(e){}
+}
 
 /* HERO PARALLAX ZOOM */
 const heroBg = document.getElementById('heroBg');
@@ -3564,15 +3594,7 @@ async function loadActuList(){
     const res = await fetch('/api/messages?action=actu-list');
     const data = await res.json();
     const list = data.actualities || [];
-    // Notifier pour les nouvelles actualités
-    const lastSeenActu = parseInt(localStorage.getItem('adenom_last_actu')||'0', 10);
-    list.forEach(a => {
-      const ts = new Date(a.createdAt).getTime();
-      if(ts > lastSeenActu){
-        const tag = a.tag==='urgent' ? '🚨' : a.tag==='event' ? '📅' : '📢';
-        addNotif('actu', tag + ' ' + (a.title||'Nouvelle publication'), a.text ? a.text.substring(0,80) : '', 'actu');
-      }
-    });
+    // Marquer comme vu (la notif est déjà envoyée par checkNewActuNotifs au chargement de l'app)
     if(list.length) localStorage.setItem('adenom_last_actu', new Date(list[0].createdAt).getTime());
     if(!list.length){
       el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>';
@@ -3827,4 +3849,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:04:30 EAT
+</html>Ven 19 jui 2026 08:18:44 EAT
