@@ -152,6 +152,83 @@ module.exports = async (req, res) => {
       return res.status(200).json({ members });
     }
 
+    // ---- VOLA LIST ----
+    if (action === 'vola-list' && req.method === 'GET') {
+      const transactions = await db.getVolaTransactions();
+      // Calcul solde = entrées - dépenses
+      const solde = transactions.reduce((acc, t) => {
+        return t.type === 'entree' ? acc + t.montant : acc - t.montant;
+      }, 0);
+      return res.status(200).json({ transactions, solde });
+    }
+
+    // ---- VOLA ADD (admin only) ----
+    if (action === 'vola-add' && req.method === 'POST') {
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      const t = {
+        id: randomUUID(),
+        montant: parseFloat(body.montant) || 0,
+        type: body.type === 'entree' ? 'entree' : 'depense',
+        description: (body.description || '').slice(0, 500),
+        faitPar: (body.faitPar || '').slice(0, 200),
+        createdAt: body.createdAt || new Date().toISOString()
+      };
+      if (!t.montant || !t.description) return res.status(400).json({ error: 'Montant et description requis.' });
+      await db.createVolaTransaction(t);
+      return res.status(200).json({ transaction: t });
+    }
+
+    // ---- VOLA DELETE (admin only) ----
+    if (action === 'vola-delete' && req.method === 'POST') {
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      await db.deleteVolaTransaction(body.id);
+      return res.status(200).json({ ok: true });
+    }
+
+    // ---- MATERIELS LIST ----
+    if (action === 'materiel-list' && req.method === 'GET') {
+      const materiels = await db.getMateriels();
+      return res.status(200).json({ materiels });
+    }
+
+    // ---- MATERIEL ADD (admin only) ----
+    if (action === 'materiel-add' && req.method === 'POST') {
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      const m = {
+        id: randomUUID(),
+        nom: (body.nom || '').slice(0, 200),
+        quantite: parseInt(body.quantite) || 1,
+        etat: ['bon', 'moyen', 'mauvais'].includes(body.etat) ? body.etat : 'bon',
+        description: (body.description || '').slice(0, 500),
+        createdAt: new Date().toISOString()
+      };
+      if (!m.nom) return res.status(400).json({ error: 'Nom requis.' });
+      await db.createMateriel(m);
+      return res.status(200).json({ materiel: m });
+    }
+
+    // ---- MATERIEL UPDATE (admin only) ----
+    if (action === 'materiel-update' && req.method === 'POST') {
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      const m = {
+        id: body.id,
+        nom: (body.nom || '').slice(0, 200),
+        quantite: parseInt(body.quantite) || 1,
+        etat: ['bon', 'moyen', 'mauvais'].includes(body.etat) ? body.etat : 'bon',
+        description: (body.description || '').slice(0, 500)
+      };
+      if (!m.id || !m.nom) return res.status(400).json({ error: 'ID et nom requis.' });
+      await db.updateMateriel(m);
+      return res.status(200).json({ materiel: m });
+    }
+
+    // ---- MATERIEL DELETE (admin only) ----
+    if (action === 'materiel-delete' && req.method === 'POST') {
+      if (!checkAdminCode(req, body)) return res.status(403).json({ error: 'Code admin invalide.' });
+      await db.deleteMateriel(body.id);
+      return res.status(200).json({ ok: true });
+    }
+
     return res.status(400).json({ error: 'Action inconnue.' });
 
   } catch (err) {
