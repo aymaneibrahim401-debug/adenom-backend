@@ -1959,6 +1959,17 @@ function stopMembershipPolling() {
 
 // Détecte les nouvelles actualités publiées et notifie une seule fois par publication,
 // sans attendre que l'utilisateur ouvre la page Actualités.
+// Retourne true si l'utilisateur réside encore dans le campus
+// (la porte ne contient PAS le mot "(ancien)")
+function isResident() {
+  if (!currentUser) return false;
+  try {
+    const d = JSON.parse(currentUser.membershipMessage || '{}');
+    const porte = (d.role || '').toLowerCase();
+    return porte !== '' && !porte.includes('(ancien)');
+  } catch(e) { return false; }
+}
+
 async function checkNewActuNotifs(){
   try{
     const res = await fetch('/api/messages?action=actu-list');
@@ -1970,7 +1981,9 @@ async function checkNewActuNotifs(){
     [...list].reverse().forEach(a => {
       const ts = new Date(a.createdAt).getTime();
       if(ts > lastSeenActu){
-        const tag = a.tag==='urgent' ? '🚨' : a.tag==='event' ? '📅' : '📢';
+        // Les actus ADENOM sont réservées aux résidents du campus
+        if(a.tag === 'adenom' && !isResident()) return;
+        const tag = a.tag==='urgent' ? '🚨' : a.tag==='event' ? '📅' : a.tag==='adenom' ? '🏠' : '📢';
         addNotif('actu', tag + ' ' + (a.title||'Nouvelle publication'), a.text ? a.text.substring(0,80) : '', 'actu');
       }
     });
@@ -2235,6 +2248,7 @@ function closeRegionPage(){
               <option value="info">ℹ️ Info</option>
               <option value="event">📅 Événement</option>
               <option value="urgent">🚨 Urgent</option>
+              <option value="adenom">🏠 ADENOM (résidents uniquement)</option>
             </select>
             <button class="fb-post-btn" onclick="adminPostActu()">Publier</button>
           </div>
@@ -2293,6 +2307,7 @@ function closeRegionPage(){
 .actu-tag.info{background:#e3f0ff;color:#0070ba;}
 .actu-tag.event{background:#fff0e3;color:#e07b00;}
 .actu-tag.urgent{background:#ffeaea;color:#e0334d;}
+.actu-tag.adenom{background:#e8f5e9;color:#1a7a3a;font-weight:700;}
 .actu-body{padding:12px 16px;}
 .actu-title-text{font-size:14px;font-weight:700;color:#003087;margin:6px 0 4px;}
 .actu-text{font-size:12px;color:#555;line-height:1.6;}
@@ -2327,6 +2342,7 @@ function closeRegionPage(){
             <option value="info">ℹ️ Info</option>
             <option value="event">📅 Événement</option>
             <option value="urgent">🚨 Urgent</option>
+            <option value="adenom">🏠 ADENOM (résidents uniquement)</option>
           </select>
           <input id="actuTitle" type="text" placeholder="Titre..." style="flex:2;padding:8px;border:1.5px solid #e8eef5;border-radius:10px;font-size:12px;">
           <button class="actu-post-btn" onclick="postActu()">Publier</button>
@@ -3648,13 +3664,16 @@ async function loadActuList(){
     const list = data.actualities || [];
     // Marquer comme vu (la notif est déjà envoyée par checkNewActuNotifs au chargement de l'app)
     if(list.length) localStorage.setItem('adenom_last_actu', new Date(list[0].createdAt).getTime());
-    if(!list.length){
+    if(!list.length){ el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>'; return; }
+      // Filtrer les actus ADENOM pour les non-résidents
+    const filteredList = list.filter(a => a.tag !== 'adenom' || isResident());
+    if(!filteredList.length){
       el.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Aucune actualité pour le moment.</div>';
       return;
     }
-    el.innerHTML = list.map(a => {
+    el.innerHTML = filteredList.map(a => {
       const date = new Date(a.createdAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-      const tagLabel = a.tag==='info' ? 'ℹ️ Info' : a.tag==='event' ? '📅 Événement' : '🚨 Urgent';
+      const tagLabel = a.tag==='info' ? 'ℹ️ Info' : a.tag==='event' ? '📅 Événement' : a.tag==='adenom' ? '🏠 ADENOM' : '🚨 Urgent';
       return `<div class="actu-card" style="background:#fff;border-radius:14px;margin:0 16px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.07);overflow:hidden;">
         ${a.image ? `<img src="${a.image}" alt="" style="width:100%;max-height:180px;object-fit:cover;">` : ''}
         <div class="actu-body">
@@ -3901,4 +3920,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:59:24 EAT
+</html>Ven 19 jui 2026 09:06:01 EAT
