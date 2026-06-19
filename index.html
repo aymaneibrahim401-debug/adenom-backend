@@ -85,6 +85,10 @@ header.hide-on-scroll{
 
 /* BANDEAU LOGO MEMBRE (remplace Connexion / Ouvrir un compte) */
 /* ANIMATIONS HEADER */
+@keyframes slideToLeft {
+  from { opacity:1; transform:translateX(0); }
+  to   { opacity:0; transform:translateX(-60px); }
+}
 @keyframes slideFromLeft {
   from { opacity:0; transform:translateX(-60px); }
   to   { opacity:1; transform:translateX(0); }
@@ -1717,7 +1721,10 @@ function updateAccountUI(){
     if(hamburger) hamburger.style.display = 'none';
     if(profileWrap) profileWrap.style.display = '';
     if(memberBanner) memberBanner.style.display = '';
-    if(logoImg) logoImg.style.display = 'none';
+    if(logoImg){
+      logoImg.style.animation = 'slideToLeft 0.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards';
+      setTimeout(() => { logoImg.style.display = 'none'; logoImg.style.animation = ''; }, 400);
+    }
     if(headerRight) headerRight.style.justifyContent = 'flex-start';
 
     const fullName = `${currentUser.firstName} ${currentUser.lastName}`.trim();
@@ -3856,4 +3863,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 08:38:36 EAT
+</html>Ven 19 jui 2026 08:41:34 EAT
