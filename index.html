@@ -1696,17 +1696,30 @@ async function handleAuthSubmit(e, type){
       return false;
     }
 
-    // Convertir en base64
-    const toBase64 = file => new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = rej;
-      r.readAsDataURL(file);
+    // Compresser une image CIN avant envoi (max 1000px, qualité 0.7) → ~200-400KB
+    const compressCIN = file => new Promise((res, rej) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1000;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        res(canvas.toDataURL('image/jpeg', 0.70));
+      };
+      img.onerror = rej;
+      img.src = url;
     });
 
     setSubmitLoading('joinSubmitBtn', true, 'Envoyer ma demande');
     try{
-      const [cinRectoB64, cinVersoB64] = await Promise.all([toBase64(rectoFile), toBase64(versoFile)]);
+      const [cinRectoB64, cinVersoB64] = await Promise.all([compressCIN(rectoFile), compressCIN(versoFile)]);
 
       const details = {
         cin: cin.value.trim(),
@@ -4362,4 +4375,4 @@ async function adminValidate(userId, approve){
 }
 </script>
 </body>
-</html>Ven 19 jui 2026 15:22:53 EAT
+</html>Sam 20 jui 2026 10:26:39 EAT
